@@ -27,4 +27,5 @@ await strip('algorithms','astronaut',[null,{algorithm:'atkinson'},{algorithm:'fl
 await strip('palettes','chelsea',[{palette:PALETTES.MONO_BLUE},{palette:dusk},{palette:PALETTES.GAMEBOY}],['Blue ink + white','Dusk / four colors','Game Boy'],360);
 console.log('Generated real photographic examples in site/assets.');
 
+await import('./generate-tarot-previews.mjs');
 await import('./generate-social-preview.mjs');

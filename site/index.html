@@ -6,38 +6,36 @@
   <meta name="description" content="Dither images with fixed palettes, live responsive rendering, and a scriptable CLI.">
   <link rel="canonical" href="https://jcinis.github.io/ditherto/">
   <meta property="og:type" content="website">
-  <meta property="og:title" content="dither·to — Less color. More feeling.">
+  <meta property="og:title" content="dither·to — Less color. More vibes.">
   <meta property="og:description" content="Fixed palettes. Live pixels. Dithering for your images, your site, and your scripts.">
   <meta property="og:image" content="https://jcinis.github.io/ditherto/assets/arcana-share.png">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
-  <meta property="og:image:alt" content="dither·to with The Magician and The Empress tarot studies dithered in four amber colors.">
+  <meta property="og:image:alt" content="dither·to with The Magician and The Empress tarot studies dithered in blue ink and white.">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:image" content="https://jcinis.github.io/ditherto/assets/arcana-share.png">
   <link rel="stylesheet" href="./arcana.css">
+  <link rel="stylesheet" href="./site-shell.css">
+  <link rel="stylesheet" href="./theme-controls.css">
 </head>
 <body>
   <a class="skip" href="#main">Skip to content</a>
-  <header class="topbar">
-    <a class="wordmark" href="./index.html"><span class="pixel-mark" aria-hidden="true">▦</span> dither·to<span class="muted">_</span></a>
-    <nav aria-label="Main navigation"><a href="./playground.html">[ playground ]</a><a href="#collection">[ collection ]</a><a href="./responsive.html">[ responsive gallery ]</a></nav>
-    <div class="theme-picker" role="group" aria-label="Page and image palette"><button data-theme="amber" aria-pressed="true" title="Amber palette"><span style="--chip:#efbd76"></span>Amber</button><button data-theme="orchid" aria-pressed="false" title="Orchid palette"><span style="--chip:#d9a9cc"></span>Orchid</button><button data-theme="moss" aria-pressed="false" title="Moss palette"><span style="--chip:#bdcc8e"></span>Moss</button></div>
-  </header>
+  <header class="topbar" data-page="home"></header>
   <main id="main">
     <div class="edition"><span><i class="live-dot"></i> DITHER·TO / OPEN SOURCE</span><span>AN IMAGE PROCESSING LIBRARY WITH A POINT OF VIEW</span></div>
     <section class="hero" aria-labelledby="hero-title">
       <div class="manifesto">
         <p class="eyebrow">A SMALL TOOL FOR BEAUTIFUL CONSTRAINTS.</p>
         <h1 id="hero-title">dither·to</h1>
-        <p class="hero-line">Less color.<br>More <em>feeling.</em></p>
+        <p class="hero-line">Less color.<br>More <em>vibes.</em></p>
         <p class="lede">Trade a million colors for a little character.<br>Fixed palettes, living textures, and pixels<br class="desktop-break"> that belong together.</p>
         <div class="actions"><a class="primary" id="open-playground" href="./playground.html">Enter the playground <span>↗</span></a><a class="secondary" href="#use">Read the recipe <span>↓</span></a></div>
         <div class="terminal"><div class="terminal-head"><span>~/images</span><span>PNG OUT / JSON BACK</span></div><code id="cli-demo"></code><p>Browser · Node · CLI &nbsp; / &nbsp; MIT licensed</p></div>
-        <div class="palette-line"><span>THE CURRENT INK</span><div id="palette-chips" aria-label="Current palette"></div><span id="palette-name">AMBER / 4</span></div>
+        <div class="palette-line"><span>THE CURRENT INK</span><div id="palette-chips" aria-label="Current palette"></div><span id="palette-name">ORCHID / 4</span></div>
       </div>
       <div class="image-terminal">
         <div class="window-title"><span><i class="live-dot"></i> ARCANA / <span id="card-name">THE MAGICIAN</span></span><span aria-hidden="true">─ &nbsp; □ &nbsp; ×</span></div>
-        <div class="card-stage"><span class="stage-coordinate" aria-hidden="true">01 / LIVE</span><div class="hero-card"><img class="arcana-image" id="featured-card" src="./tarot/01-the-magician.png" width="941" height="1672" alt="The Magician tarot card" data-exposure="0.3"><img id="original-overlay" src="./tarot/01-the-magician.png" width="941" height="1672" alt="Original Magician artwork" hidden></div><span class="stage-aside" aria-hidden="true">THE ORIGINAL IS ALWAYS THE SOURCE.</span></div>
+        <div class="card-stage"><span class="stage-coordinate" aria-hidden="true">01 / LIVE</span><div class="hero-card"><img class="arcana-image" id="featured-card" src="./tarot/01-the-magician.webp" width="768" height="1365" alt="The Magician tarot card" data-exposure="0.3"><img id="original-overlay" src="./tarot/01-the-magician.webp" width="768" height="1365" alt="Original Magician artwork" hidden></div><span class="stage-aside" aria-hidden="true">THE ORIGINAL IS ALWAYS THE SOURCE.</span></div>
         <div class="card-controls"><label for="card-select">CARD<select id="card-select"><option value="00-the-fool">0 / The Fool</option><option value="01-the-magician" selected>I / The Magician</option><option value="02-the-high-pristess">II / The High Priestess</option><option value="03-the-empress">III / The Empress</option><option value="04-the-emperor">IV / The Emperor</option></select></label><button id="show-original" aria-pressed="false">Show original</button></div>
         <div class="window-status"><span id="hero-dimensions">Preparing pixels…</span><span id="render-state" role="status">WORKER STARTING</span></div>
       </div>
@@ -45,15 +43,15 @@
     <div class="capabilities"><span><b>01</b> PICK YOUR PALETTE</span><span><b>02</b> FIND YOUR TEXTURE</span><span><b>03</b> KEEP YOUR ORIGINALS</span><span><b>04</b> RESIZE. RENDER AGAIN.</span></div>
     <section id="collection" class="collection" aria-labelledby="collection-title">
       <div class="section-top"><div><p class="eyebrow">THE MAJOR ARCANA / STUDIES 0–IV</p><h2 id="collection-title">Five cards. One visual language.</h2></div><p>A shared palette. A different story.<br>Your tarot artwork, rendered here and now.</p></div>
-      <div class="collection-toolbar"><label for="texture">TEXTURE <select id="texture"><option value="atkinson">Atkinson</option><option value="floyd-steinberg">Floyd–Steinberg</option><option value="ordered">Ordered / Bayer</option></select></label><label class="exposure-control" for="tone">EXPOSURE <input id="tone" type="range" min="-1" max="1.5" step="0.1" value="0.3"><output id="tone-value">+0.3 EV</output></label><span>APPLIES TO EVERY CARD ↙</span></div>
+      <div class="collection-toolbar"><label for="texture">TEXTURE <select id="texture"><option value="atkinson">Atkinson</option><option value="floyd-steinberg">Floyd–Steinberg</option><option value="ordered">Ordered / Bayer</option><option value="knoll">Knoll</option><option value="nearest">Nearest color</option></select></label><label class="exposure-control" for="tone">EXPOSURE <input id="tone" type="range" min="-1" max="1.5" step="0.1" value="0.3"><output id="tone-value">+0.3 EV</output></label><span>APPLIES TO EVERY CARD ↙</span></div>
       <div class="card-grid" id="card-grid"></div>
       <p class="collection-foot"><span>↑ Open any card in the playground.</span><span>Live pixels. No scaled dither exports.</span></p>
     </section>
     <section id="use" class="use-section" aria-labelledby="use-title">
-      <div><p class="eyebrow">TAKE THE LOOK WITH YOU</p><h2 id="use-title">Your palette.<br>Your whole world.</h2><p>Give a site a shared visual identity, then tune each image until it feels right. Let CSS set the size. dither·to handles the new pixels.</p><a class="secondary" href="./responsive.html">See the responsive API in action ↗</a><p class="preview-note">Install with <code>npm install ditherto</code>, or run <code>npx ditherto</code>. <a href="https://www.npmjs.com/package/ditherto">View on npm ↗</a></p></div>
+      <div><p class="eyebrow">TAKE THE LOOK WITH YOU</p><h2 id="use-title">Your palette.<br>Your whole world.</h2><p>Give a site a shared visual identity, then tune each image until it feels right. Let CSS set the size. dither·to handles the new pixels.</p><a class="secondary" href="./algorithms.html">Compare the algorithms ↗</a><p class="preview-note">Install with <code>npm install ditherto</code>, or run <code>npx ditherto</code>. <a href="https://www.npmjs.com/package/ditherto">View on npm ↗</a></p></div>
       <div class="code-window"><div class="window-title"><span>style-your-images.js</span><button id="copy-code">Copy recipe</button></div><pre><code id="live-code"></code></pre><div class="window-status"><span>NO WIDTH REQUIRED</span><span>ORIGINALS PRESERVED</span></div></div>
     </section>
-    <footer><a class="wordmark" href="./index.html">▦ dither·to_</a><span>Made for the joy of making things.</span><a href="https://github.com/jcinis/ditherto">Source on GitHub ↗</a></footer>
+    <footer><a class="wordmark" href="./index.html"><span class="mark" aria-hidden="true"></span>dither·to</a><span>Made for the joy of making things.</span><a href="https://github.com/jcinis/ditherto">Source on GitHub ↗</a></footer>
   </main>
   <script type="module" src="./arcana.js"></script>
 </body>

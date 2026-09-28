@@ -10,7 +10,7 @@ const server = createServer(async (request, response) => {
     const path = decodeURIComponent(new URL(request.url, 'http://localhost').pathname);
     if (path === '/') { response.writeHead(302, { Location: '/index.html' }).end(); return; }
     let relative = path.slice(1);
-    if (['index.html', 'classic.html', 'site.css', 'site.js', 'arcana.css', 'arcana.js', 'themes.js', 'playground.html', 'playground.css', 'playground.js', 'responsive.html', 'responsive.css', 'responsive.js'].includes(relative) || relative.startsWith('assets/') || relative.startsWith('tarot/')) relative = 'site/' + relative;
+    if (['index.html', 'classic.html', 'site.css', 'site.js', 'arcana.css', 'arcana.js', 'themes.js', 'theme-controls.css', 'site-shell.css', 'site-header.js', 'playground.html', 'playground.css', 'playground.js', 'responsive.html', 'algorithms.html', 'algorithms.css', 'algorithms.js'].includes(relative) || relative.startsWith('assets/') || relative.startsWith('tarot/')) relative = 'site/' + relative;
     const target = resolve(root, relative);
     if (!target.startsWith(root)) throw new Error('Invalid path');
     if (!['examples/', 'experiments/', 'dist/', 'tests/fixtures/', 'site/'].some(prefix => relative.startsWith(prefix)) || relative.split('/').includes('..')) {

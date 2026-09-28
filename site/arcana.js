@@ -1,7 +1,8 @@
+import './site-header.js';
 import { observeDitherDOM } from './dist/dom.js';
-import { cards, themes, paletteFor, applyTheme } from './themes.js';
+import { cards, themes, paletteFor, applyTheme, selectedTheme } from './themes.js';
 const $=id=>document.getElementById(id);
-let theme='amber';
+let theme=selectedTheme();
 let controller;
 let worker;
 let serial=0;
@@ -12,7 +13,7 @@ const selectedCard=()=>cards.find(card=>card.id===$('card-select').value);
 for(const card of cards){
   const link=document.createElement('a');
   link.className='tarot-link';link.dataset.card=card.id;
-  link.innerHTML=`<figure><div class="tarot-frame"><div class="tarot-pixels"><img class="arcana-image" src="./tarot/${card.file}" width="941" height="1672" alt="${card.name} tarot card" data-exposure="0.3"></div></div><figcaption><span class="card-number">${card.number.padStart(2,'0')} / MAJOR ARCANA</span><span class="card-title">${card.name} ↗</span></figcaption></figure>`;
+  link.innerHTML=`<figure><div class="tarot-frame"><div class="tarot-pixels"><img class="arcana-image" src="./tarot/${card.file}" width="768" height="1365" alt="${card.name} tarot card" data-exposure="0.3"></div></div><figcaption><span class="card-number">${card.number.padStart(2,'0')} / MAJOR ARCANA</span><span class="card-title">${card.name} ↗</span></figcaption></figure>`;
   $('card-grid').append(link);
 }
 function refreshRecipe(){
@@ -21,7 +22,7 @@ function refreshRecipe(){
   const exposure=Number($('tone').value);
   $('tone-value').textContent=`${exposure>0?'+':''}${exposure} EV`;
   $('palette-chips').replaceChildren(...themes[theme].colors.map(color=>{const el=document.createElement('span');el.style.background=color;el.title=color;return el;}));
-  $('palette-name').textContent=`${themes[theme].name.toUpperCase()} / 4`;
+  $('palette-name').textContent=`${themes[theme].name.toUpperCase()} / ${themes[theme].colors.length}`;
   $('live-code').textContent=`import { observeDitherDOM } from 'ditherto/dom';\n\nconst images = observeDitherDOM('img.dither', {\n  palette: ${JSON.stringify(palette)},\n  algorithm: '${algorithm}',\n  exposure: ${exposure},\n  resample: 'area'\n});\n\n// Fine-tune a single image.\nawait images.images[0].update({ contrast: 1.1 });\n\n// On unmount: images.destroy();`;
   $('cli-demo').textContent=`$ node dist/cli.js \\\n  site/tarot/${selectedCard().file} \\\n  --palette '${themes[theme].colors.join(',')}' \\\n  --algorithm ${algorithm} --exposure ${exposure} --json`;
   $('copy-code').textContent='Copy recipe';
@@ -29,8 +30,8 @@ function refreshRecipe(){
     const params=new URLSearchParams({card:link.dataset.card??selectedCard().id,theme,algorithm,exposure});
     link.href=`./playground.html?${params}`;
   }
-  for (const link of document.querySelectorAll('a[href^="./responsive.html"]')) {
-    link.href = `./responsive.html?${new URLSearchParams({theme, algorithm})}`;
+  for (const link of document.querySelectorAll('a[href^="./algorithms.html"]')) {
+    link.href = `./algorithms.html?${new URLSearchParams({theme, card:selectedCard().id, exposure})}`;
   }
 }
 function report(error){if(error.name!=='AbortError'){$('render-state').textContent='RENDER ERROR';$('hero-dimensions').textContent=error.message;}}
@@ -47,7 +48,7 @@ function bind(){
   controller=observeDitherDOM('img.arcana-image',{palette:paletteFor(theme),algorithm:$('texture').value,resample:'area'}, {
     render,onError:report,onRender(canvas,image){
       canvas.setAttribute('aria-label',image.alt);
-      if(image.id==='featured-card'){$('hero-dimensions').textContent=`${canvas.width} × ${canvas.height} / 4 COLORS`;$('render-state').textContent='LIVE / RESIZE TO RENDER';}
+      if(image.id==='featured-card'){$('hero-dimensions').textContent=`${canvas.width} × ${canvas.height} / ${themes[theme].colors.length} COLORS`;$('render-state').textContent='LIVE / RESIZE TO RENDER';}
     },
   });
   // Preserve current controls when returning through the browser's page cache.
@@ -81,4 +82,6 @@ $('show-original').addEventListener('click',()=>{
 $('copy-code').addEventListener('click',async()=>{try{await navigator.clipboard.writeText($('live-code').textContent);$('copy-code').textContent='Copied';}catch{$('copy-code').textContent='Select code to copy';}});
 window.addEventListener('pagehide',dispose);
 window.addEventListener('pageshow',event=>{if(event.persisted)bind();});
-applyTheme(theme);refreshRecipe();bind();
+applyTheme(theme);
+for(const button of document.querySelectorAll('.theme-picker button'))button.setAttribute('aria-pressed',String(button.dataset.theme===theme));
+refreshRecipe();bind();

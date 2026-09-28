@@ -16,3 +16,11 @@ main>details p{font-size:11px;color:var(--muted)}
 main>details a{text-decoration:underline;text-underline-offset:3px}
 #galleryRecipe{font-size:11px}
 @media(max-width:600px){.gallery-controls{padding:18px;gap:18px}.gallery{gap:24px}.gallery-note{margin:30px 0}main>details{padding:18px}}
+
+.algorithm-heading{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:8px;margin:0 0 18px;min-height:38px}
+.algorithm-heading h2{font:600 13px/1.5 ui-monospace,monospace;margin:0;color:var(--accent)}
+.algorithm-heading span{font-size:9px;color:var(--muted)}
+.algorithm-description{font-size:11px;line-height:1.8;color:var(--muted);min-height:80px;margin:16px 0}
+.algorithm-link{font-size:10px;text-decoration:underline;text-underline-offset:4px}
+.gallery-controls label{min-width:160px}
+@media(max-width:600px){.algorithm-description{min-height:0}.algorithm-heading{min-height:0}}

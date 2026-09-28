@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>dither·to / Algorithm gallery</title>
+  <meta name="description" content="Dither images with fixed palettes, live responsive rendering, and a scriptable CLI.">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="dither·to — Algorithm gallery">
+  <meta property="og:description" content="Fixed palettes. Live pixels. Dithering for your images, your site, and your scripts.">
+  <meta property="og:image" content="https://jcinis.github.io/ditherto/assets/arcana-share.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="dither·to with The Magician and The Empress tarot studies dithered in blue ink and white.">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="https://jcinis.github.io/ditherto/assets/arcana-share.png">
+  <link rel="stylesheet" href="./examples/demo.css">
+  <link rel="stylesheet" href="./examples/responsive-demo.css">
+  <link rel="stylesheet" href="./playground.css">
+  <link rel="stylesheet" href="./algorithms.css">
+  <link rel="stylesheet" href="./site-shell.css">
+  <link rel="stylesheet" href="./theme-controls.css">
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <header class="topbar" data-page="algorithms"></header>
+  <main id="main">
+    <div class="edition"><span><i class="live-dot"></i> DITHER·TO / ALGORITHM GALLERY</span><span>ONE IMAGE / FIVE ALGORITHMS / YOUR PALETTE</span></div>
+    <div class="page-intro"><div><p class="eyebrow">SAME IMAGE. DIFFERENT PERSONALITIES.</p><h1>Find your<br>kind of texture.</h1></div><p class="intro-note">One source, one palette, five ways to see it.<br>Change the image. Find the texture that feels right.</p></div>
+    <section class="gallery-controls" aria-label="Shared image settings">
+      <label>Source image<select id="source"></select></label>
+      <label>Palette<select id="colors"></select></label>
+      <label class="layout-control">Exposure <output id="exposureValue">+0.3 EV</output><input id="exposure" type="range" min="-2" max="2" step="0.1" value="0.3"></label>
+      <label class="layout-control">Contrast <output id="contrastValue">0%</output><input id="contrast" type="range" min="-100" max="100" step="1" value="0"></label>
+      <label class="layout-control">Gallery width <output id="widthLabel">100%</output><input id="galleryWidth" type="range" min="40" max="100" value="100"></label>
+      <button type="button" id="toggle">Show originals</button>
+    </section>
+    <p class="gallery-status" id="status" role="status" aria-live="polite">Preparing images…</p>
+    <div id="gallery" class="gallery"></div>
+    <div class="gallery-note"><span class="note-star">✳</span><p>Each card uses the same source, palette, exposure, and contrast. Only the algorithm changes. Resize the gallery to see each texture rebuilt at its new size, or take a favorite into the playground.</p></div>
+    <details open><summary>Make it your own <span>+</span></summary><pre><code id="galleryRecipe"></code></pre><button class="text-button" id="copyGallery" type="button">Copy comparison recipe</button><p class="recipe-help">The recipe keeps the current palette and tone settings, with a different algorithm on each image. CSS controls their size.</p><p>This page renders in a shared worker to keep the controls responsive. See <a href="./algorithms.js">the example source</a>.</p></details>
+    <footer><span>Tarot studies · rendered live with dither·to.</span><a href="./playground.html">Open the image playground ↗</a></footer>
+  </main>
+  <script type="module" src="./algorithms.js"></script>
+</body>
+</html>

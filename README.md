@@ -4,7 +4,7 @@ Dither images into a fixed palette, with optional resizing and tone adjustments.
 
 Three algorithms: **Atkinson**, **Floyd–Steinberg**, and deterministic **4×4 Bayer ordered dithering**. Bring your own palette or use black/white, monochrome red/green/blue/yellow, Game Boy, CGA, RGB, or 16-level grayscale.
 
-[Homepage](https://jcinis.github.io/ditherto/) · [Image playground](https://jcinis.github.io/ditherto/playground.html) · [Responsive gallery](https://jcinis.github.io/ditherto/responsive.html) · [CLI guide](#cli-for-people-and-agents) · [API](#api)
+[Homepage](https://jcinis.github.io/ditherto/) · [Image playground](https://jcinis.github.io/ditherto/playground.html) · [Algorithm gallery](https://jcinis.github.io/ditherto/algorithms.html) · [CLI guide](#cli-for-people-and-agents) · [API](#api)
 
 ![Coffee photograph beside actual Atkinson output using four colors](https://raw.githubusercontent.com/jcinis/ditherto/main/site/assets/hero.png)
 
@@ -12,7 +12,7 @@ Three algorithms: **Atkinson**, **Floyd–Steinberg**, and deterministic **4×4 
 
 ## Try it
 
-Open either playground above—no account or installation. Images stay on your device. The image playground exports PNGs, JavaScript and a matching CLI command. The Arcana site includes five tarot studies, Amber/Orchid/Moss themes, and live rendering from the originals as the layout changes. The responsive gallery demonstrates independent image settings, automatic rerendering, and restoring originals.
+Open either playground above—no account or installation. Images stay on your device. The image playground exports PNGs, JavaScript and a matching CLI command. The Arcana site includes five tarot studies, Orchid, Amber, Moss, Game Boy, Blue Mono, and black-and-white Mono themes, and live rendering from the originals as the layout changes. The tarot examples use compact full-color WebP sources for faster loading, with the PNG masters preserved in the repository. Orchid is the default; your selected theme carries between the example pages. The algorithm gallery compares all five algorithms on the same image with shared palette and tone controls, automatic rerendering, and original/processed toggling.
 
 Install the library in your project:
 
@@ -346,7 +346,7 @@ Each controller has one resize observer and a serial render queue. Updates are c
 
 Call `handle.destroy()` for one image or `gallery.destroy()` for the group. Disposal rejects pending per-image calls with `AbortError`, releases cached pixels and prevents late results from painting. It does not stop computations already running in an injected renderer. DOM removal alone does not dispose a binding; framework integrations should call `destroy()` on unmount.
 
-The default renderer runs on the calling thread, yielding between images. For expensive interactive processing, supply `render(source, options): Promise<ImageData>` backed by a worker. It receives an isolated pixel copy that may be transferred or modified. One worker can serve the whole group: see [the responsive gallery](https://jcinis.github.io/ditherto/responsive.html) and [its shared-worker wiring](https://github.com/jcinis/ditherto/blob/main/examples/responsive-demo.js). Worker lifetime belongs to the caller. The gallery includes shared palette/algorithm controls, independent exposures, layout resizing, and original/processed toggling.
+The default renderer runs on the calling thread, yielding between images. For expensive interactive processing, supply `render(source, options): Promise<ImageData>` backed by a worker. It receives an isolated pixel copy that may be transferred or modified. One worker can serve the whole group: see [the algorithm gallery](https://jcinis.github.io/ditherto/algorithms.html) and [its shared-worker wiring](https://github.com/jcinis/ditherto/blob/main/site/algorithms.js). Worker lifetime belongs to the caller. The gallery uses a different algorithm per image with shared palette and tone controls, layout resizing, and original/processed toggling.
 
 ## Algorithm behavior
 
