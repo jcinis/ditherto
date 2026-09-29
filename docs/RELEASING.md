@@ -2,9 +2,11 @@
 
 Published September 25, 2026: [`ditherto@0.1.0`](https://www.npmjs.com/package/ditherto) is available on npm. The first release was published through an authenticated local session. npm trusted publishing is configured for `jcinis/ditherto` and `release.yml`; future stable GitHub releases trigger the automated workflow described below.
 
+The new algorithm collection is included in the repository and website build. It requires a subsequent npm release; publishing the website alone does not update `ditherto@0.1.0`.
+
 ## What is ready
 
-- ESM and CommonJS entries with matching TypeScript declarations: `ditherto`, `ditherto/browser`, `ditherto/dom`, `ditherto/node`.
+- ESM and CommonJS entries with matching TypeScript declarations: `ditherto`, `ditherto/browser`, `ditherto/dom`, `ditherto/node`, and optional `ditherto/blue-noise`.
 - The `ditherto` CLI, MIT license, visual README and a restricted package file list.
 - `prepack` rebuilds the distribution before packing. `npm pack` produces `ditherto-0.1.0.tgz`.
 - Package verification covers exports, declarations, CLI behavior, browser dependency isolation and gzip budgets.
@@ -25,7 +27,7 @@ npm install /absolute/path/to/ditherto-0.1.0.tgz
 npx ditherto input.jpg -o output.png --palette MONO_BLUE --json
 ```
 
-Inspect the archive before publishing: `npm pack --dry-run`. It should contain only `dist/`, `package.json`, `README.md` and `LICENSE`, not photos, tests, site assets or development scripts. README images use absolute GitHub URLs so the package stays small.
+Inspect the archive before publishing: `npm pack --dry-run`. It should contain only `dist/`, `package.json`, `README.md`, `ALGORITHMS.md` and `LICENSE`, not photos, tests, site assets or development scripts. README images use absolute GitHub URLs so the package stays small.
 
 ## Manual npm publication
 
@@ -69,4 +71,4 @@ The preparation run passed 259 unit tests, package verification, and 96 tests ac
 
 One earlier local WebKit run read a blank source image in the existing DOM refresh test. It did not recur in 20 targeted runs or the subsequent full suite. Its cause is not established; no speculative decoding change or automatic test retry was added. Keep this observation in view during Safari testing before the public npm launch.
 
-The approved Arcana design is served at `/`, `/playground.html`, and `/responsive.html`. Previous example URLs and local experiment bookmarks redirect to the new pages. The earlier design remains available at `/classic.html` and the `classic-` example pages. Tarot artwork is kept in the website only, outside the npm package.
+The approved Arcana design is served at `/`, `/playground.html`, and `/algorithms.html` (`/responsive.html` redirects there). The algorithm comparison page provides all eleven treatments, shared family controls, local uploads, and a PNG inspector. Previous example URLs and local experiment bookmarks redirect to the new pages. The earlier design remains available at `/classic.html` and the `classic-` example pages. Tarot artwork is kept in the website only, outside the npm package.

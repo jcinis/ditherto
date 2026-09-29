@@ -6,6 +6,12 @@
 
 // Core types
 export type { 
+  AlgorithmOptions,
+  KnollOptions,
+  OrderedOptions,
+  DiffusionOptions,
+  HalftoneOptions,
+  RiemersmaOptions,
   GeneratePaletteOptions,
   ResampleMethod,
   DitherOptions, 

@@ -1,4 +1,3 @@
-import { algorithms } from './algorithmRegistry.js';
 import type { DitherOptions, ColorRGB } from './types.js';
 import { ditherToImageData } from './imageProcessor.js';
 
@@ -8,6 +7,12 @@ export { generatePalette } from './palette/extract.js';
 export { loadImageData, resizeImageData } from './imageIO.js';
 export { algorithms } from './algorithmRegistry.js';
 export type {
+  AlgorithmOptions,
+  KnollOptions,
+  OrderedOptions,
+  DiffusionOptions,
+  HalftoneOptions,
+  RiemersmaOptions,
   GeneratePaletteOptions,
   ResampleMethod,
   DitherOptions,
@@ -32,17 +37,28 @@ function parseTones(dataset: DOMStringMap, options: DitherOptions): void {
   }
 }
 
+function parseAlgorithmConfig(dataset: DOMStringMap, options: DitherOptions): void {
+  if (dataset.algorithmOptions !== undefined) {
+    try {
+      options.algorithmOptions = JSON.parse(dataset.algorithmOptions);
+    } catch {
+      throw new Error('data-algorithm-options must contain valid JSON');
+    }
+  }
+}
+
 export function parseDataAttributes(img: HTMLImageElement): DitherOptions {
   const options: DitherOptions = {};
   const { dataset } = img;
   parseTones(dataset, options);
+  parseAlgorithmConfig(dataset, options);
   switch (dataset.resample) {
     case 'nearest':
     case 'area':
       options.resample = dataset.resample;
   }
   const algorithm = dataset.algorithm ?? dataset.alg;
-  if (algorithm && algorithms.get(algorithm)) options.algorithm = algorithm;
+  if (algorithm) options.algorithm = algorithm;
   for (const key of ['width', 'height', 'step', 'paletteColors'] as const) {
     const value = Number(dataset[key]);
     if (Number.isSafeInteger(value) && value > 0) options[key] = value;

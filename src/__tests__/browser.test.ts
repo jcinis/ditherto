@@ -96,6 +96,15 @@ describe('actual DOM helper behavior', () => {
     expect([canvas.width, canvas.height]).toEqual([6, 3]);
   });
 
+  it('parses algorithm-specific JSON and rejects malformed JSON', () => {
+    const img = image();
+    img.dataset.algorithm = 'knoll';
+    img.dataset.algorithmOptions = '{"strength":0.2,"candidates":64}';
+    expect(parseDataAttributes(img)).toEqual({ algorithm: 'knoll', algorithmOptions: { strength: 0.2, candidates: 64 } });
+    img.dataset.algorithmOptions = 'bad json';
+    expect(() => parseDataAttributes(img)).toThrow('valid JSON');
+  });
+
   it('parses valid attributes and rejects partial numeric strings', () => {
     const img = image();
     Object.assign(img.dataset, {

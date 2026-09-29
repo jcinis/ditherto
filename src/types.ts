@@ -26,10 +26,50 @@ export interface GeneratePaletteOptions {
   maxColors?: number;
 }
 
+/** Validated by the selected algorithm; custom algorithms may define their own keys. */
+export type AlgorithmOptions = Readonly<Record<string, unknown>>;
+
+/** Bayer matrix settings for Ordered and Knoll. */
+export interface OrderedOptions extends AlgorithmOptions {
+  /** Logical pixel matrix size; default 4. */
+  bayerSize?: 2 | 4 | 8 | 16;
+}
+export interface DiffusionOptions extends AlgorithmOptions {
+  /** Alternate scan direction on odd logical rows; default false. */
+  serpentine?: boolean;
+}
+export interface HalftoneOptions extends AlgorithmOptions {
+  /** Cluster cell size in logical pixels, 2–16; default 8. */
+  cellSize?: number;
+}
+export interface RiemersmaOptions extends AlgorithmOptions {
+  /** Recent errors to retain, 2–64; default 16. */
+  history?: number;
+}
+/** Knoll's optional controls. Defaults: 20% strength, 32 candidate selections. */
+export interface KnollOptions extends OrderedOptions {
+  strength?: number;
+  candidates?: number;
+}
+
 /** Configuration options for dithering operations */
 export interface DitherOptions {
   /** Dither algorithm name */
-  algorithm?: 'atkinson' | 'floyd-steinberg' | 'ordered' | (string & {});
+  algorithm?:
+    | 'atkinson'
+    | 'floyd-steinberg'
+    | 'ordered'
+    | 'knoll'
+    | 'nearest'
+    | 'sierra-lite'
+    | 'stucki'
+    | 'halftone'
+    | 'riemersma'
+    | 'ordered-blue-noise'
+    | 'knoll-blue-noise'
+    | (string & {});
+  /** Options for the selected algorithm. Unsupported keys and values are rejected. */
+  algorithmOptions?: AlgorithmOptions;
   /** Explicit palette overrides everything else */
   palette?: readonly ColorRGB[];
   /** Swatch or reference photo for palette extraction */
@@ -55,5 +95,14 @@ export interface DitherOptions {
 /** Dithering algorithm interface for pluggable algorithms */
 export interface DitherAlgorithm {
   readonly name: string;
-  apply(data: ImageData, palette: readonly ColorRGB[], step: number): ImageData;
+  /** Opt into configuration and reject unsupported keys/values before image loading. */
+  validateOptions?(options: AlgorithmOptions): void;
+  /** Optional palette contract, checked before processing (and before decoding explicit palettes). */
+  validatePalette?(palette: readonly ColorRGB[]): void;
+  apply(
+    data: ImageData,
+    palette: readonly ColorRGB[],
+    step: number,
+    options?: AlgorithmOptions
+  ): ImageData;
 }

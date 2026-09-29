@@ -1,0 +1,54 @@
+import { test, expect } from '@playwright/test';
+import { fileURLToPath } from 'node:url';
+const ready = page => expect(page.locator('#status')).toContainText('Ready', {timeout:20000});
+const pixels = (page,id) => page.locator(`#${id}`).evaluate(canvas=>canvas.toDataURL());
+test.beforeEach(async({page})=>{await page.goto('/experiments/algorithm-lab/');await ready(page);});
+test('renders every treatment and Knoll zero equals nearest',async({page})=>{
+  await expect(page.locator('#gallery canvas')).toHaveCount(12);
+  expect(await page.locator('#gallery canvas').evaluateAll(canvases=>canvases.every(c=>c.width===320&&c.height===213))).toBe(true);
+  const bayer=await pixels(page,'ordered-bayer');
+  expect(await pixels(page,'ordered-blue')).not.toBe(bayer);
+  await page.locator('#strength').fill('0');await ready(page);
+  await expect(page.locator('#status')).toContainText('Knoll 0%');
+  const nearest=await pixels(page,'nearest');
+  expect(await pixels(page,'knoll-bayer')).toBe(nearest);
+  expect(await pixels(page,'knoll-blue')).toBe(nearest);
+});
+test('settings affect the appropriate outputs and support color palettes',async({page})=>{
+  await page.getByRole('combobox',{name:'Image',exact:true}).selectOption('gradient');await ready(page);
+  const before={};for(const id of ['ordered-bayer','ordered-blue','halftone','riemersma','stucki']) before[id]=await pixels(page,id);
+  await page.getByRole('combobox',{name:'Bayer matrix',exact:true}).selectOption('8');await ready(page);
+  expect(await pixels(page,'ordered-bayer')).not.toBe(before['ordered-bayer']);
+  expect(await pixels(page,'ordered-blue')).toBe(before['ordered-blue']);
+  await page.getByRole('combobox',{name:'Halftone cell',exact:true}).selectOption('4');await ready(page);
+  expect(await pixels(page,'halftone')).not.toBe(before.halftone);
+  await page.getByRole('combobox',{name:'Riemersma history',exact:true}).selectOption('32');await ready(page);
+  expect(await pixels(page,'riemersma')).not.toBe(before.riemersma);
+  await page.getByLabel('Serpentine scanning').check();await ready(page);
+  expect(await pixels(page,'stucki')).not.toBe(before.stucki);
+  await page.getByRole('combobox',{name:'Palette',exact:true}).selectOption('dusk');await ready(page);
+  await expect(page.locator('#swatches span')).toHaveCount(4);
+  const used=await page.locator('#halftone').evaluate(canvas=>{const d=canvas.getContext('2d').getImageData(0,0,canvas.width,canvas.height).data;return [...new Set(Array.from({length:d.length/4},(_,i)=>[...d.slice(i*4,i*4+3)].join(',')))];});
+  expect(used.sort()).toEqual(['244,236,207','37,33,59']);
+});
+test('portrait sources, extracted palettes and uploads render at bounded size',async({page})=>{
+  await page.getByRole('combobox',{name:'Image',exact:true}).selectOption('tarot');await ready(page);
+  const size=await page.locator('#original').evaluate(c=>[c.width,c.height]);expect(size[1]).toBe(320);expect(size[0]).toBeLessThan(320);
+  await page.getByRole('combobox',{name:'Palette',exact:true}).selectOption('photo16');await ready(page);
+  await expect(page.locator('#swatches span')).toHaveCount(16);
+  await page.getByRole('combobox',{name:'Pixel step',exact:true}).selectOption('3');await ready(page);
+  await page.locator('#upload').setInputFiles(fileURLToPath(new URL('../../tests/fixtures/input/gradient-4x4.png',import.meta.url)));await ready(page);
+  expect(await page.locator('#original').evaluate(c=>[c.width,c.height])).toEqual([320,320]);
+});
+test('inspection, PNG download and narrow layouts work',async({page})=>{
+  await page.getByRole('button',{name:'Inspect Halftone',exact:true}).click();
+  await expect(page.getByRole('dialog')).toBeVisible();
+  await expect(page.getByRole('link',{name:'Download PNG'})).toHaveAttribute('href',/^blob:/);
+  const download=page.waitForEvent('download');await page.getByRole('link',{name:'Download PNG'}).click();
+  expect((await download).suggestedFilename()).toBe('ditherto-halftone.png');
+  await page.getByRole('button',{name:'Close',exact:true}).click();
+  await page.setViewportSize({width:390,height:844});
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth)).toBe(true);
+  await page.getByRole('combobox',{name:'View scale',exact:true}).selectOption('2');
+  expect(await page.locator('#halftone').evaluate(c=>c.style.width)).toBe('640px');
+});

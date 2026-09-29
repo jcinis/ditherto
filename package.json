@@ -63,6 +63,16 @@
         "types": "./dist/dom.d.cts",
         "default": "./dist/dom.cjs"
       }
+    },
+    "./blue-noise": {
+      "import": {
+        "types": "./dist/blue-noise.d.ts",
+        "default": "./dist/blue-noise.js"
+      },
+      "require": {
+        "types": "./dist/blue-noise.d.cts",
+        "default": "./dist/blue-noise.cjs"
+      }
     }
   },
   "main": "./dist/index.cjs",
@@ -74,7 +84,8 @@
   "files": [
     "dist",
     "README.md",
-    "LICENSE"
+    "LICENSE",
+    "ALGORITHMS.md"
   ],
   "directories": {
     "example": "examples",

@@ -28,7 +28,7 @@ test('real worker rendering, changes and repeat resizing from the original', asy
   ).toBe(first);
   await page.locator('#algorithm').selectOption('ordered');
   await ready(page);
-  await expect(page.locator('#algorithmHelp')).toContainText('reproducible');
+  await expect(page.locator('#algorithmHelp')).toContainText('Bayer pattern');
   const ordered = await page
     .locator('#resultCanvas')
     .evaluate((canvas: HTMLCanvasElement) => canvas.toDataURL());
@@ -66,7 +66,7 @@ test('responsive resize changes actual bitmap dimensions and mobile layout fits'
   await expect
     .poll(() => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth))
     .toBe(true);
-  for (const select of await page.locator('select').all()) {
+  for (const select of await page.locator('select:visible').all()) {
     // Firefox can report 43.99997 for a 44 CSS-pixel control.
     expect((await select.boundingBox())!.height).toBeGreaterThanOrEqual(44 - 0.001);
   }
@@ -82,7 +82,7 @@ test('file upload and Node/browser pixel parity for all algorithms after resizin
   await expect(page.locator('#sourceName')).toHaveText('gradient-4x4.png');
   await ready(page);
   const input = await loadImageData('tests/fixtures/input/gradient-4x4.png');
-  for (const algorithm of ['atkinson', 'floyd-steinberg', 'ordered']) {
+  for (const algorithm of ['atkinson', 'floyd-steinberg', 'ordered', 'knoll', 'nearest']) {
     const expected = await ditherToImageData(input, {
       algorithm,
       palette: PALETTES.GAMEBOY,
@@ -160,6 +160,45 @@ test('DOM helper waits for decoding and replaces images in a real browser', asyn
     };
   });
   expect(result).toEqual({ width: 8, height: 8, label: 'Gradient', replaced: true });
+});
+
+test('Knoll controls export replayable options and nearest matches zero strength', async ({ page }) => {
+  await page.goto('/playground.html?algorithm=knoll');
+  await ready(page);
+  await setWidth(page, 96);
+  await expect(page.locator('#knollControls')).toBeVisible();
+  await expect(page.locator('#knollStrength')).toHaveValue('20');
+  await expect(page.locator('#recipe')).toContainText('algorithmOptions: {"strength":0.2,"candidates":32}');
+  await page.locator('#knollControls summary').click();
+  await page.locator('#knollCandidates').fill('64');
+  await page.locator('#knollStrength').fill('35');
+  await ready(page);
+  await expect(page.locator('#recipe')).toContainText('algorithmOptions: {"strength":0.35,"candidates":64}');
+  await expect(page.locator('#cliRecipe')).toContainText('--strength 0.35 --candidates 64');
+  const options = { algorithm: 'knoll', algorithmOptions: { strength: 0.35, candidates: 64 }, palette: PALETTES.RGB, width: 7 };
+  const input = await loadImageData('tests/fixtures/input/gradient-4x4.png');
+  const expected = await ditherToImageData(input, options);
+  const actual = await page.evaluate(async (options) => {
+    const { ditherToImageData } = await import('/dist/browser.js');
+    return Array.from((await ditherToImageData('/tests/fixtures/input/gradient-4x4.png', options)).data);
+  }, options);
+  expect(actual).toEqual(Array.from(expected.data));
+  await page.locator('#knollStrength').fill('0');
+  await ready(page);
+  const zero = await page.locator('#resultCanvas').evaluate((canvas: HTMLCanvasElement) => canvas.toDataURL());
+  await page.locator('#algorithm').selectOption('nearest');
+  await ready(page);
+  await expect(page.locator('#knollControls')).toBeHidden();
+  expect(await page.locator('#resultCanvas').evaluate((canvas: HTMLCanvasElement) => canvas.toDataURL())).toBe(zero);
+  await expect(page.locator('#recipe')).not.toContainText('algorithmOptions');
+  await expect(page.locator('#cliRecipe')).not.toContainText('--strength');
+  await page.locator('#algorithm').selectOption('knoll');
+  await ready(page);
+  await expect(page.locator('#knollStrength')).toHaveValue('0');
+  await page.locator('#knollCandidates').fill('0');
+  await expect(page.locator('#error')).toBeVisible();
+  await page.locator('#algorithm').selectOption('ordered');
+  await ready(page);
 });
 
 test('desktop visual review', async ({ page }, testInfo) => {

@@ -25,22 +25,48 @@
   <a class="skip" href="#main">Skip to content</a>
   <header class="topbar" data-page="algorithms"></header>
   <main id="main">
-    <div class="edition"><span><i class="live-dot"></i> DITHER·TO / ALGORITHM GALLERY</span><span>ONE IMAGE / FIVE ALGORITHMS / YOUR PALETTE</span></div>
-    <div class="page-intro"><div><p class="eyebrow">SAME IMAGE. DIFFERENT PERSONALITIES.</p><h1>Find your<br>kind of texture.</h1></div><p class="intro-note">One source, one palette, five ways to see it.<br>Change the image. Find the texture that feels right.</p></div>
-    <section class="gallery-controls" aria-label="Shared image settings">
-      <label>Source image<select id="source"></select></label>
-      <label>Palette<select id="colors"></select></label>
-      <label class="layout-control">Exposure <output id="exposureValue">+0.3 EV</output><input id="exposure" type="range" min="-2" max="2" step="0.1" value="0.3"></label>
-      <label class="layout-control">Contrast <output id="contrastValue">0%</output><input id="contrast" type="range" min="-100" max="100" step="1" value="0"></label>
-      <label class="layout-control">Gallery width <output id="widthLabel">100%</output><input id="galleryWidth" type="range" min="40" max="100" value="100"></label>
-      <button type="button" id="toggle">Show originals</button>
+    <div class="edition"><span><i class="live-dot"></i> DITHER·TO / ALGORITHM GALLERY</span><span>ONE IMAGE / ELEVEN ALGORITHMS / YOUR PALETTE</span></div>
+    <div class="page-intro"><div><p class="eyebrow">SAME IMAGE. DIFFERENT PERSONALITIES.</p><h1>Find your<br>kind of texture.</h1></div><p class="intro-note">One source, one palette, eleven ways to see it.<br>Change the image. Find the texture that feels right.</p></div>
+    <section class="gallery-controls" aria-label="Comparison controls">
+      <fieldset><legend>01 / Source & tone</legend>
+        <label>Source image<select id="source"></select></label>
+        <label>Palette<select id="colors"></select></label>
+        <label class="upload-image">Or upload an image<input type="file" id="upload" accept="image/*"></label>
+        <label class="layout-control">Exposure <output id="exposureValue">+0.3 EV</output><input id="exposure" type="range" min="-2" max="2" step="0.1" value="0.3"></label>
+        <label class="layout-control">Contrast <output id="contrastValue">0%</output><input id="contrast" type="range" min="-100" max="100" step="1" value="0"></label>
+        <p id="sourceNote">Images stay in your browser. All cards start from the same original.</p>
+      </fieldset>
+      <fieldset><legend>02 / Ordered & Knoll</legend>
+        <label>Bayer matrix<select id="bayerSize"><option value="2">2 × 2</option><option value="4" selected>4 × 4</option><option value="8">8 × 8</option><option value="16">16 × 16</option></select></label>
+        <label>Knoll candidates<select id="candidates"><option>16</option><option selected>32</option><option>64</option><option>128</option></select></label>
+        <label class="layout-control wide">Knoll strength <output id="strengthValue">20%</output><input type="range" id="strength" min="0" max="100" value="20"></label>
+        <p>At 0% strength, both Knoll variants match Nearest color. Blue noise uses a fixed 64 × 64 pattern.</p>
+      </fieldset>
+      <fieldset><legend>03 / Diffusion & dots</legend>
+        <label class="check"><input type="checkbox" id="serpentine">Serpentine scanning</label>
+        <p>Alternates direction for Atkinson, Floyd–Steinberg, Sierra Lite, and Stucki.</p>
+        <label>Halftone cell<select id="cellSize"><option value="4">4 × 4</option><option value="6">6 × 6</option><option value="8" selected>8 × 8</option><option value="12">12 × 12</option><option value="16">16 × 16</option></select></label>
+        <label>Riemersma history<select id="history"><option>8</option><option selected>16</option><option>32</option><option>64</option></select></label>
+        <label>Pixel step<select id="step"><option>1</option><option>2</option><option>3</option><option>4</option></select></label>
+        <p id="halftoneNote">Halftone uses the darkest and lightest palette colors.</p>
+      </fieldset>
     </section>
-    <p class="gallery-status" id="status" role="status" aria-live="polite">Preparing images…</p>
+    <div class="comparison-toolbar">
+      <p class="gallery-status" id="status" role="status" aria-live="polite">Preparing images…</p>
+      <div id="swatches" aria-label="Palette colors"></div>
+      <label class="layout-control">Gallery width <output id="widthLabel">100%</output><input id="galleryWidth" type="range" min="40" max="100" value="100"></label>
+      <button type="button" id="toggle" aria-pressed="false">Show originals</button>
+    </div>
     <div id="gallery" class="gallery"></div>
-    <div class="gallery-note"><span class="note-star">✳</span><p>Each card uses the same source, palette, exposure, and contrast. Only the algorithm changes. Resize the gallery to see each texture rebuilt at its new size, or take a favorite into the playground.</p></div>
-    <details open><summary>Make it your own <span>+</span></summary><pre><code id="galleryRecipe"></code></pre><button class="text-button" id="copyGallery" type="button">Copy comparison recipe</button><p class="recipe-help">The recipe keeps the current palette and tone settings, with a different algorithm on each image. CSS controls their size.</p><p>This page renders in a shared worker to keep the controls responsive. See <a href="./algorithms.js">the example source</a>.</p></details>
+    <div class="gallery-note"><span class="note-star">✳</span><p>Each card uses the same source, palette, exposure, and contrast. Only the algorithm changes. Adjust a family of algorithms together, inspect a card at 1× or 2×, or take a favorite and its settings into the playground. Resizing rebuilds each texture from its original.</p></div>
+    <details open><summary>Make it your own <span>+</span></summary><pre><code id="galleryRecipe"></code></pre><button class="text-button" id="copyGallery" type="button">Copy comparison recipe</button><p class="recipe-help">The recipe keeps the current palette, tone, and algorithm settings, with a different treatment on each image. CSS controls their size.</p><p>This page renders in a shared worker to keep the controls responsive. See <a href="./algorithms.js">the example source</a> or the <a href="https://github.com/jcinis/ditherto/blob/main/ALGORITHMS.md">algorithm reference</a>.</p></details>
     <footer><span>Tarot studies · rendered live with dither·to.</span><a href="./playground.html">Open the image playground ↗</a></footer>
   </main>
+  <dialog id="detail" aria-labelledby="detailTitle">
+    <header><h2 id="detailTitle"></h2><button type="button" id="closeDetail" autofocus>Close</button></header>
+    <div class="detail-image"><canvas id="detailCanvas"></canvas></div>
+    <div class="detail-actions"><label>View scale<select id="detailScale"><option value="1">1× pixels</option><option value="2" selected>2× pixels</option></select></label><a id="downloadDetail" download="ditherto.png">Preparing PNG…</a></div>
+  </dialog>
   <script type="module" src="./algorithms.js"></script>
 </body>
 </html>

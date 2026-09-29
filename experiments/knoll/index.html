@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Knoll dither prototype · ditherto</title>
+<style>
+  :root { color-scheme: dark; font: 16px/1.5 system-ui, sans-serif; background: #17181c; color: #eeeee8; }
+  body { max-width: 1440px; margin: 0 auto; padding: 32px; }
+  h1 { font-size: clamp(28px, 4vw, 48px); letter-spacing: -.04em; margin: 8px 0; }
+  p { color: #b8b9c1; max-width: 850px; }
+  a { color: #c8e3ab; }
+  .eyebrow { text-transform: uppercase; letter-spacing: .15em; font-size: 12px; color: #c8e3ab; }
+  .controls { display: flex; flex-wrap: wrap; gap: 20px; padding: 24px 0; border-block: 1px solid #3b3d44; margin: 28px 0 16px; }
+  label { display: grid; gap: 8px; font-size: 13px; }
+  select, input::file-selector-button { background: #282a31; color: inherit; border: 1px solid #4c4f59; border-radius: 5px; padding: 8px; font: inherit; }
+  input[type=range] { width: 180px; accent-color: #c8e3ab; }
+  input[type=file] { max-width: 245px; }
+  .grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 20px; }
+  figure { margin: 0; min-width: 0; }
+  canvas { width: 100%; height: auto; image-rendering: pixelated; background: #fff; }
+  figcaption { display: flex; justify-content: space-between; padding: 10px 0; gap: 8px; }
+  .time { color: #c8e3ab; font-variant-numeric: tabular-nums; }
+  #status { min-height: 24px; font-size: 14px; }
+  #swatches { display: flex; flex-wrap: wrap; gap: 3px; margin: 20px 0; }
+  #swatches span { width: 24px; height: 24px; border: 1px solid #ffffff30; }
+  details { margin-top: 24px; color: #b8b9c1; }
+  @media(max-width: 800px) { body { padding: 20px; } .grid { grid-template-columns: 1fr; } }
+</style>
+<div class="eyebrow">ditherto / algorithm study</div>
+<h1>Can ordered color look better?</h1>
+<p>Compare the current two-color Bayer method with Knoll’s multi-color mixture. Try the photo palette, then adjust strength to find the balance between color and texture.</p>
+<div class="controls">
+  <label>Photograph<select id="photo"><option value="coffee">Coffee</option><option value="chelsea">Chelsea</option><option value="astronaut">Astronaut</option></select></label>
+  <label>Or use your own image<input id="upload" type="file" accept="image/*"></label>
+  <label>Palette<select id="palette"><option value="photo16">Photo · 16 colors</option><option value="dusk">Dusk · 4 colors</option><option value="GAMEBOY">Game Boy · 4 colors</option><option value="CGA_4">CGA · 4 colors</option><option value="BW">Black & white</option></select></label>
+  <label>Strength <output id="strengthValue">20%</output><input id="strength" aria-label="Knoll strength" type="range" min="0" max="100" value="20" step="5"></label>
+  <label>Candidates<select id="candidates"><option>16</option><option selected>32</option><option>64</option><option>128</option></select></label>
+  <label>Render width<select id="width"><option>160</option><option selected>320</option><option>640</option></select></label>
+</div>
+<p id="status" role="status">Loading photograph…</p>
+<div class="grid">
+  <figure><canvas id="original"></canvas><figcaption>Original <span id="dimensions"></span></figcaption></figure>
+  <figure><canvas id="ordered"></canvas><figcaption>Ordered / Bayer <span class="time" id="orderedTime"></span></figcaption></figure>
+  <figure><canvas id="knoll"></canvas><figcaption>Knoll <span class="time" id="knollTime"></span></figcaption></figure>
+</div>
+<div id="swatches" aria-label="Output palette"></div>
+<details><summary>About this comparison</summary><p>Both algorithms use the same resized source, palette and 4×4 Bayer grid. Knoll searches for multiple candidate colors independently for each pixel, with no error passed to neighboring pixels. Strength zero gives nearest-color quantization. More candidates increase processing time; they do not enlarge the 4×4 pattern.</p><p>Times show one browser worker run of the algorithm, excluding image decoding, resizing, palette generation and display. Initial runs may include JavaScript warm-up. This prototype uses encoded sRGB color distances. Knoll is available as a built-in algorithm.</p><p>Based on <a href="https://30fps.net/pages/revisiting-yliluoma-2/">Revisiting Yliluoma’s ordered dither algorithm</a>. All processing stays in your browser.</p></details>
+<script type="module" src="./app.js"></script>
+</html>

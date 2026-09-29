@@ -1,26 +1,33 @@
-.gallery-controls{background:var(--panel);border-color:var(--line);gap:24px}
-.gallery-controls label{font-size:10px}
-.gallery-controls button{background:var(--accent);color:var(--paper);border-color:var(--accent);font-weight:bold;font-size:11px}
-.gallery-controls button:hover{background:var(--ink)}
-.gallery{grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr));gap:24px}
-.photo{background:var(--paper);outline:1px solid var(--line);outline-offset:5px}
-.caption{border-color:var(--line);font-size:10px;padding-top:20px}
+.gallery-controls{display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:20px;background:none;border:0;padding:0;align-items:stretch}
+.gallery-controls fieldset{display:flex;flex-wrap:wrap;align-content:start;gap:16px;min-width:0;margin:0;padding:20px;border:1px solid var(--line);background:var(--panel)}
+.gallery-controls legend{padding:0 8px;font-size:11px;color:var(--accent)}
+.gallery-controls label{font-size:10px;min-width:0;flex:1 1 110px}
+.gallery-controls .wide,.gallery-controls .upload-image,.gallery-controls .check{flex-basis:100%}
+.gallery-controls .check{display:flex;align-items:center;gap:10px;min-height:44px}
+.gallery-controls .check input{width:18px;height:18px}
+.gallery-controls p{font-size:11px;line-height:1.8;color:var(--muted);margin:0;flex-basis:100%}
+.gallery-controls input[type=file]{width:100%;min-width:0;font:inherit;font-size:10px;padding:8px;border:1px solid var(--line);background:var(--paper)}
+.gallery-controls input[type=file]::file-selector-button{font:inherit;padding:7px;border:1px solid var(--line);background:var(--panel);color:var(--ink);margin-right:8px}
+.comparison-toolbar{display:flex;align-items:center;flex-wrap:wrap;gap:20px;margin:22px 0}
+.comparison-toolbar .gallery-status{flex:1 1 240px;margin:0!important}
+.comparison-toolbar label{display:grid;gap:4px;position:relative;font-size:10px;min-width:150px}
+.comparison-toolbar button,dialog button{min-height:44px;background:var(--accent);color:var(--paper);border:1px solid var(--accent);padding:10px 15px;font:inherit;font-size:11px;cursor:pointer}
+#swatches{display:flex;gap:4px}#swatches span{width:16px;height:16px;border:1px solid var(--line)}
+.gallery{grid-template-columns:repeat(3,minmax(0,1fr));gap:22px;align-items:stretch}
+.gallery article{border:1px solid var(--line);background:var(--panel);display:flex;flex-direction:column;overflow:hidden}
+.algorithm-heading{display:flex;align-items:baseline;justify-content:space-between;gap:8px;padding:16px;margin:0}
+.algorithm-heading h2{font:600 14px/1.5 ui-monospace,monospace;margin:0;color:var(--accent)}
+.algorithm-heading span{font-size:10px;color:var(--muted)}
+.photo{display:block;position:relative;border:0;padding:0;border-radius:0;width:100%;height:340px;background:var(--paper);cursor:zoom-in;overflow:hidden}
+.photo img,.photo canvas{display:block;width:100%;height:100%;object-fit:contain;image-rendering:pixelated}
+.photo:hover{outline:1px solid var(--accent);outline-offset:-1px}
+.caption{border:0;font-size:9px;padding:14px 16px 0;gap:8px}
 .dimensions,.gallery-status{color:var(--muted)}
-.exposure-label{font-size:11px}
-.exposure-label output{color:var(--accent)}
-.gallery-note{max-width:780px;margin:44px 0}
-.gallery-note p{font-size:12px;color:var(--muted);line-height:1.9}
-main>details{background:var(--panel);border-color:var(--line);padding:24px}
-main>details summary{font-size:14px;color:var(--accent)}
-main>details p{font-size:11px;color:var(--muted)}
-main>details a{text-decoration:underline;text-underline-offset:3px}
-#galleryRecipe{font-size:11px}
-@media(max-width:600px){.gallery-controls{padding:18px;gap:18px}.gallery{gap:24px}.gallery-note{margin:30px 0}main>details{padding:18px}}
-
-.algorithm-heading{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:8px;margin:0 0 18px;min-height:38px}
-.algorithm-heading h2{font:600 13px/1.5 ui-monospace,monospace;margin:0;color:var(--accent)}
-.algorithm-heading span{font-size:9px;color:var(--muted)}
-.algorithm-description{font-size:11px;line-height:1.8;color:var(--muted);min-height:80px;margin:16px 0}
-.algorithm-link{font-size:10px;text-decoration:underline;text-underline-offset:4px}
-.gallery-controls label{min-width:160px}
-@media(max-width:600px){.algorithm-description{min-height:0}.algorithm-heading{min-height:0}}
+.algorithm-description{font-size:11px;line-height:1.8;color:var(--muted);margin:12px 16px;flex:1}
+.algorithm-link{font-size:10px;text-decoration:underline;text-underline-offset:4px;margin:0 16px 16px;min-height:32px;display:flex;align-items:center}
+.gallery-note{max-width:900px;margin:36px 0}.gallery-note p{font-size:12px;color:var(--muted);line-height:1.9}
+main>details{background:var(--panel);border-color:var(--line);padding:24px}main>details summary{font-size:14px;color:var(--accent)}main>details p{font-size:11px;color:var(--muted)}main>details a{text-decoration:underline;text-underline-offset:3px}#galleryRecipe{font-size:11px}
+dialog{width:min(1100px,94vw);max-height:92vh;box-sizing:border-box;background:var(--paper);color:var(--ink);border:1px solid var(--line);padding:20px}
+dialog::backdrop{background:#000b}dialog header,.detail-actions{display:flex;align-items:center;justify-content:space-between;gap:16px}dialog h2{font-size:16px;margin:0}.detail-image{overflow:auto;max-height:65vh;margin:18px 0;background:var(--panel)}#detailCanvas{display:block;margin:auto;image-rendering:pixelated}.detail-actions label{display:flex;align-items:center;gap:12px;font-size:11px}.detail-actions a{font-size:11px;text-decoration:underline}
+@media(max-width:1050px){.gallery-controls{grid-template-columns:1fr 1fr}.gallery-controls fieldset:first-child{grid-column:1/-1}.gallery{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:600px){.gallery-controls{grid-template-columns:1fr;gap:16px}.gallery-controls fieldset:first-child{grid-column:auto}.gallery-controls fieldset{padding:16px}.gallery-controls label{flex-basis:110px}.gallery{grid-template-columns:1fr;gap:20px}.photo{height:320px}.gallery-note{margin:28px 0}main>details{padding:18px}.detail-actions{flex-wrap:wrap}dialog{padding:14px}.comparison-toolbar{gap:16px}}

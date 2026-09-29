@@ -1,7 +1,7 @@
 import dts from 'rollup-plugin-dts';
 
 const external = (id) => id.startsWith('node:') || id === '@napi-rs/canvas';
-const entries = ['index', 'browser', 'dom', 'node', 'cli'];
+const entries = ['index', 'browser', 'dom', 'node', 'cli', 'blue-noise'];
 
 export default [
   ...entries.map((name) => ({

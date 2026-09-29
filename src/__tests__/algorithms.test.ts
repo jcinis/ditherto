@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { atkinsonAlgorithm } from '../algorithms/atkinson.js';
 import { floydSteinbergAlgorithm } from '../algorithms/floydSteinberg.js';
+import { knollAlgorithm } from '../algorithms/knoll.js';
+import { nearestAlgorithm } from '../algorithms/nearest.js';
 import { orderedAlgorithm } from '../algorithms/ordered.js';
 import { createImageData, createSolidImageData } from './testUtils.js';
 import { PALETTES } from '../palette/utils.js';
@@ -45,7 +47,7 @@ function reference(input: ImageData, palette: readonly ColorRGB[], atkinson: boo
   return output;
 }
 
-for (const algorithm of [atkinsonAlgorithm, floydSteinbergAlgorithm, orderedAlgorithm]) {
+for (const algorithm of [atkinsonAlgorithm, floydSteinbergAlgorithm, orderedAlgorithm, knollAlgorithm, nearestAlgorithm]) {
   describe(algorithm.name, () => {
     it('is deterministic, uses only palette colors and does not mutate input', () => {
       const image = createImageData(
@@ -66,7 +68,7 @@ for (const algorithm of [atkinsonAlgorithm, floydSteinbergAlgorithm, orderedAlgo
       expect(image.data).toEqual(before);
       for (let i = 0; i < first.data.length; i += 4)
         expect(PALETTES.GAMEBOY).toContainEqual(Array.from(first.data.slice(i, i + 3)));
-      if (algorithm !== orderedAlgorithm)
+      if (algorithm === atkinsonAlgorithm || algorithm === floydSteinbergAlgorithm)
         expect(Array.from(first.data)).toEqual(
           reference(image, PALETTES.GAMEBOY, algorithm === atkinsonAlgorithm)
         );

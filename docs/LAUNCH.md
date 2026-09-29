@@ -28,7 +28,7 @@ Draft first comment:
 
 > I wanted a way to give a whole site a consistent image style without forcing every photo to use the same exposure and contrast. Ditherto lets you share a palette and algorithm, tune each image, and rerender from the original when the layout changes.
 >
-> It has Atkinson, Floyd–Steinberg and Bayer dithering, photo-derived palettes with a chosen color count, and a CLI that can export PNGs with JSON results. The playground runs locally in a worker and exports the settings as JavaScript or a CLI command. I use that render–inspect–adjust loop with both people and coding agents.
+> It has nine core algorithms—including Atkinson, Floyd–Steinberg, Bayer, Knoll, Sierra Lite, Stucki, halftone, Riemersma, and nearest-color mapping—plus two optional blue-noise variants, photo-derived palettes with a chosen color count, and a CLI that can export PNGs with JSON results. The playground runs locally in a worker and exports the settings as JavaScript or a CLI command. I use that render–inspect–adjust loop with both people and coding agents.
 >
 > The library is MIT licensed. I'd especially like feedback on the responsive API and which controls help you get a good result on difficult photographs.
 

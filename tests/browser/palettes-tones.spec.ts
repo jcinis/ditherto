@@ -53,7 +53,7 @@ test('borrow colors from another photograph; tones and source replacement keep t
   await expect(page.locator('#sourceName')).toContainText('coffee');
   const palette = await generatePalette('tests/fixtures/photos/astronaut.png',{colors:8});
   expect(await swatches(page)).toEqual(palette.map(c => `RGB ${c.join(', ')}`));
-  await page.locator('.tone-controls summary').click();
+  await page.locator('details.tone-controls > summary').click();
   await page.locator('#exposure').fill('0.7');
   await page.locator('#contrast').fill('30');
   await ready(page);
@@ -103,7 +103,7 @@ test('invalid budgets and transparent references fail clearly, then recover', as
 test('tone controls reset exactly and all algorithms match Node after adjustment', async ({page}) => {
   await setup(page);
   const initial = await pixels(page);
-  await page.locator('.tone-controls summary').click();
+  await page.locator('details.tone-controls > summary').click();
   await page.locator('#exposure').fill('1');
   await page.locator('#contrast').fill('40');
   await ready(page);

@@ -39,14 +39,15 @@ export function sampleIndex(data: ImageData, x: number, y: number, step: number)
   return -1;
 }
 
-type Tap = readonly [dx: number, dy: number, weight: number];
+export type Tap = readonly [dx: number, dy: number, weight: number];
 
-/** Raster-scan diffusion, with unclamped floating-point error and O(width / step) scratch space. */
+/** Raster or serpentine diffusion, with unclamped floating-point error and O(width / step) scratch space. */
 export function diffuse(
   data: ImageData,
   palette: readonly ColorRGB[],
   step: number,
-  taps: readonly Tap[]
+  taps: readonly Tap[],
+  serpentine = false
 ): ImageData {
   const result = prepare(data, palette, step);
   const columns = Math.ceil(data.width / step);
@@ -55,7 +56,9 @@ export function diffuse(
   const errors = Array.from({ length: rowCount }, () => new Float64Array(columns * 3));
   for (let y = 0; y < rows; y++) {
     const current = errors[y % rowCount]!;
-    for (let x = 0; x < columns; x++) {
+    const direction = serpentine && y % 2 ? -1 : 1;
+    for (let column = 0; column < columns; column++) {
+      const x = direction === 1 ? column : columns - 1 - column;
       const i = sampleIndex(data, x * step, y * step, step);
       // Invisible source colors must not inject error into visible neighbours.
       if (i < 0) continue;
@@ -66,7 +69,7 @@ export function diffuse(
       ];
       const color = findClosestColor(pixel, palette);
       fillBlock(result, x * step, y * step, step, color);
-      spreadError(data, errors, taps, pixel, color, x, y, step, columns, rows, rowCount);
+      spreadError(data, errors, taps, pixel, color, x, y, step, columns, rows, rowCount, direction);
     }
     current.fill(0);
   }
@@ -84,10 +87,11 @@ function spreadError(
   step: number,
   columns: number,
   rows: number,
-  rowCount: number
+  rowCount: number,
+  direction: number
 ): void {
   for (const [dx, dy, weight] of taps) {
-    const nx = x + dx;
+    const nx = x + dx * direction;
     const ny = y + dy;
     if (nx < 0 || nx >= columns || ny >= rows) continue;
     if (sampleIndex(data, nx * step, ny * step, step) < 0) continue;

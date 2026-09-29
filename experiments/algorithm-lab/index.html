@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ditherto · algorithm lab</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="./style.css">
+</head>
+<body>
+<header><a href="../../_site/playground.html?algorithm=knoll&theme=blue">← Playground</a><span class="badge">LOCAL EXPERIMENT</span><h1>Algorithm lab<span>.</span></h1><p>One image, eleven treatments. Explore texture, detail and the controls worth keeping.</p></header>
+<main>
+<section class="controls" aria-label="Comparison controls">
+<fieldset><legend>Source & output</legend>
+<label>Image<select id="photo"><option value="coffee">Coffee</option><option value="astronaut">Astronaut</option><option value="chelsea">Cat</option><option value="tarot">The Magician</option><option value="gradient">Gray ramp & flat tones</option></select></label>
+<label class="upload">Or upload<input type="file" id="upload" accept="image/*"></label>
+<label>Palette<select id="palette"><option value="BW">Black & white</option><option value="MONO_BLUE">Blue</option><option value="dusk">Dusk · 4 colors</option><option value="GAMEBOY">Game Boy · 4 colors</option><option value="photo16">From photo · 16 colors</option></select></label>
+<label>Longest edge<select id="width"><option>160</option><option selected>320</option><option>480</option><option>640</option></select></label>
+<label>Pixel step<select id="step"><option>1</option><option>2</option><option>3</option><option>4</option></select></label>
+</fieldset>
+<fieldset><legend>Ordered & Knoll</legend>
+<label>Bayer matrix<select id="bayerSize"><option value="2">2 × 2</option><option value="4" selected>4 × 4</option><option value="8">8 × 8</option><option value="16">16 × 16</option></select></label>
+<label for="strength">Knoll strength <output id="strengthValue">20%</output><input type="range" id="strength" min="0" max="100" value="20"></label>
+<label>Knoll candidates<select id="candidates"><option>16</option><option selected>32</option><option>64</option><option>128</option></select></label>
+<p>Blue noise uses a fixed 64 × 64 void-and-cluster mask. At 0% strength both Knoll panels match Nearest.</p>
+</fieldset>
+<fieldset><legend>Diffusion & halftone</legend>
+<label class="check"><input type="checkbox" id="serpentine">Serpentine scanning</label>
+<p>Alternates scan direction for Atkinson, Floyd–Steinberg, Sierra Lite and Stucki.</p>
+<label>Halftone cell<select id="cellSize"><option value="4">4 × 4</option><option value="6">6 × 6</option><option value="8" selected>8 × 8</option><option value="12">12 × 12</option><option value="16">16 × 16</option></select></label>
+<label>Riemersma history<select id="history"><option>8</option><option selected>16</option><option>32</option><option>64</option></select></label>
+</fieldset>
+</section>
+<div class="summary"><p id="status" role="status">Loading comparison…</p><div id="swatches" aria-label="Palette colors"></div><label>View scale<select id="zoom"><option value="fit">Fit cards</option><option value="1">1× pixels</option><option value="2">2× pixels</option></select></label></div>
+<section id="gallery" aria-label="Algorithm comparison"></section>
+<p class="footnote">Click any image to inspect it. Times measure one algorithm pass, excluding shared resize, palette extraction and display; they are indicative, not a benchmark. Halftone uses only the darkest and lightest palette colors and averages each cell before placing its dot. All processing stays in this browser.</p>
+</main>
+<dialog id="detail"><header><h2 id="detailTitle"></h2><button id="close" autofocus>Close</button></header><div class="detailImage"><canvas id="detailCanvas"></canvas></div><a id="download" download="ditherto.png">Download PNG</a></dialog>
+<script type="module" src="./app.js"></script>
+</body></html>

@@ -1,6 +1,8 @@
 import { test, expect } from '@playwright/test';
 import { createHash } from 'node:crypto';
-import { ditherToImageData, loadImageData } from '../../dist/index.js';
+import { ditherToImageData, loadImageData, algorithms as registry } from '../../dist/index.js';
+import { registerBlueNoise } from '../../dist/blue-noise.js';
+registerBlueNoise(registry);
 import { cards, themes, paletteFor } from '../../site/themes.js';
 
 const hash = canvas => canvas.evaluate(async c => {
@@ -73,16 +75,17 @@ test('Arcana themes and settings carry to both playgrounds; recipes start expand
   await page.getByRole('button',{name:'Orchid',exact:true}).click();
   await page.getByRole('link',{name:'Compare the algorithms'}).click();
   await expect(page.locator('#colors')).toHaveValue('orchid');
-  await expect(page.locator('.gallery canvas')).toHaveCount(5);
+  await expect(page.locator('.gallery canvas')).toHaveCount(11);
 });
 
 test('Algorithm gallery compares each renderer and keeps settings through resize, source changes and restore', async ({page}, testInfo) => {
   test.setTimeout(90_000);
   await page.goto('/responsive.html?theme=orchid');
   await expect(page).toHaveURL(/\/algorithms.html\?/);
-  await expect(page.locator('.gallery canvas')).toHaveCount(5);
+  await expect(page.locator('.gallery canvas')).toHaveCount(11);
   await expect(page.locator('#galleryRecipe')).toBeVisible();
-  const algorithms=['atkinson','floyd-steinberg','ordered','knoll','nearest'];
+  await expect(page.locator('#galleryRecipe')).toContainText('registerBlueNoise(algorithms)');
+  const algorithms=['atkinson','floyd-steinberg','ordered','knoll','sierra-lite','stucki','halftone','riemersma','ordered-blue-noise','knoll-blue-noise','nearest'];
   const check = async (file='01-the-magician.webp', exposure=0.3, contrast=1, theme='orchid') => {
     for (const [index,algorithm] of algorithms.entries()) {
       await matchesOriginal(page.locator('.gallery canvas').nth(index),file,{palette:paletteFor(theme),algorithm,exposure,contrast});
@@ -97,17 +100,17 @@ test('Algorithm gallery compares each renderer and keeps settings through resize
   await page.locator('#source').selectOption('00-the-fool');
   await check('00-the-fool.webp',0.8,1.2);
   await page.locator('#toggle').click();
-  await expect(page.locator('.gallery img')).toHaveCount(5);
+  await expect(page.locator('.gallery img')).toHaveCount(11);
   await page.locator('#source').selectOption('03-the-empress');
   await page.getByRole('button',{name:'Mono',exact:true}).click();
   await page.locator('#toggle').click();
-  await expect(page.locator('.gallery canvas')).toHaveCount(5);
+  await expect(page.locator('.gallery canvas')).toHaveCount(11);
   await check('03-the-empress.webp',0.8,1.2,'mono');
   await page.screenshot({path:testInfo.outputPath('algorithm-gallery.png'),fullPage:true});
   await page.setViewportSize({width:390,height:844});
   await check('03-the-empress.webp',0.8,1.2,'mono');
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
-  await page.getByRole('link',{name:'Tune Knoll',exact:false}).click();
+  await page.getByRole('link',{name:'Tune Knoll ↗',exact:true}).click();
   await expect(page.locator('#download')).toBeEnabled();
   await expect(page.locator('#algorithm')).toHaveValue('knoll');
   await expect(page.locator('#contrast')).toHaveValue('20');
@@ -119,4 +122,69 @@ test('Algorithm gallery compares each renderer and keeps settings through resize
   await expect(page).toHaveURL(/\/playground.html\?card=00-the-fool/);
   await expect(page.locator('#download')).toBeEnabled();
   await expect(page.locator('#sourceName')).toContainText('The Fool');
+});
+
+test('Algorithm comparison shares family controls, inspects pixels and preserves settings in playground links', async ({page}) => {
+  test.setTimeout(90_000);
+  await page.goto('/algorithms.html?theme=blue&bayerSize=8&candidates=64&strength=35&cellSize=12&history=32&serpentine=true&step=2');
+  await expect(page.locator('.gallery canvas')).toHaveCount(11);
+  const settings = [
+    ['atkinson', {serpentine:true}], ['floyd-steinberg', {serpentine:true}],
+    ['ordered', {bayerSize:8}], ['knoll', {bayerSize:8,candidates:64,strength:0.35}],
+    ['sierra-lite', {serpentine:true}], ['stucki', {serpentine:true}],
+    ['halftone', {cellSize:12}], ['riemersma', {history:32}],
+    ['ordered-blue-noise', {}], ['knoll-blue-noise', {candidates:64,strength:0.35}], ['nearest', {}],
+  ] as const;
+  for (const [index,[algorithm,algorithmOptions]] of settings.entries()) {
+    await matchesOriginal(page.locator('.gallery canvas').nth(index),'01-the-magician.webp',{palette:paletteFor('blue'),algorithm,algorithmOptions,step:2,exposure:0.3});
+  }
+  await page.locator('#strength').fill('0');
+  const nearest = await hash(page.locator('.gallery canvas').nth(10));
+  await expect.poll(() => hash(page.locator('.gallery canvas').nth(3))).toBe(nearest);
+  await expect.poll(() => hash(page.locator('.gallery canvas').nth(9))).toBe(nearest);
+  await page.getByRole('button',{name:'Inspect Knoll',exact:true}).click();
+  await expect(page.getByRole('dialog')).toBeVisible();
+  expect(await hash(page.locator('#detailCanvas'))).toBe(nearest);
+  await page.locator('#detailScale').selectOption('1');
+  expect(await page.locator('#detailCanvas').evaluate(c => c.clientWidth === (c as HTMLCanvasElement).width)).toBe(true);
+  await expect(page.locator('#downloadDetail')).toHaveAttribute('href', /^blob:/);
+  const download = page.waitForEvent('download');
+  await page.locator('#downloadDetail').click();
+  expect((await download).suggestedFilename()).toBe('ditherto-knoll.png');
+  await page.keyboard.press('Escape');
+  await expect(page.getByRole('dialog')).not.toBeVisible();
+  await expect(page.locator('#galleryRecipe')).toContainText('"bayerSize":8');
+  await page.getByRole('link',{name:'Tune Knoll ↗',exact:true}).click();
+  await expect(page.locator('#download')).toBeEnabled();
+  await expect(page.locator('#bayerSize')).toHaveValue('8');
+  await expect(page.locator('#knollCandidates')).toHaveValue('64');
+  await expect(page.locator('#knollStrength')).toHaveValue('0');
+  await expect(page.locator('#step')).toHaveValue('2');
+  await matchesOriginal(page.locator('#resultCanvas'),'01-the-magician.webp',{palette:paletteFor('blue'),algorithm:'knoll',algorithmOptions:{bayerSize:8,candidates:64,strength:0},step:2,exposure:0.3});
+});
+
+test('Algorithm comparison handles local uploads and the homepage exposes optional algorithms', async ({page}) => {
+  await page.goto('/algorithms.html?theme=orchid');
+  await expect(page.locator('.gallery canvas')).toHaveCount(11);
+  await page.locator('#upload').setInputFiles('tests/fixtures/photos/coffee.png');
+  await expect(page.locator('#status')).toContainText('coffee.png');
+  const canvas = page.locator('.gallery canvas').first();
+  const width = await canvas.evaluate(c => c.parentElement.clientWidth);
+  const pixels = await ditherToImageData('tests/fixtures/photos/coffee.png',{width,resample:'area',palette:paletteFor('orchid'),exposure:0.3,algorithm:'atkinson'});
+  await expect.poll(() => hash(canvas)).toBe(createHash('sha256').update(pixels.data).digest('hex'));
+  await expect(page.locator('#galleryRecipe')).toContainText('src="your-image.png"');
+  await expect(page.getByRole('link',{name:'Tune Knoll ↗',exact:true})).toBeHidden();
+  await page.setViewportSize({width:390,height:844});
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await page.locator('#source').selectOption('00-the-fool');
+  await expect(page.getByRole('link',{name:'Tune Knoll ↗',exact:true})).toBeVisible();
+  await matchesOriginal(page.locator('.gallery canvas').first(),'00-the-fool.webp',{palette:paletteFor('orchid'),exposure:0.3,algorithm:'atkinson'});
+  await page.goto('/index.html?theme=mono');
+  await expect(page.locator('#texture option')).toHaveCount(11);
+  await page.locator('#texture').selectOption('knoll-blue-noise');
+  await matchesOriginal(page.locator('.hero-card canvas'),'01-the-magician.webp',{palette:paletteFor('mono'),exposure:0.3,algorithm:'knoll-blue-noise'});
+  await expect(page.locator('#live-code')).toContainText('registerBlueNoise(algorithms)');
+  await page.locator('#texture').selectOption('stucki');
+  await matchesOriginal(page.locator('.hero-card canvas'),'01-the-magician.webp',{palette:paletteFor('mono'),exposure:0.3,algorithm:'stucki'});
+  await expect(page.locator('#live-code')).not.toContainText('registerBlueNoise');
 });

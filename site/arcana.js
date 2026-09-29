@@ -1,5 +1,5 @@
 import './site-header.js';
-import { observeDitherDOM } from './dist/dom.js';
+import { observeDitherDOM, algorithms } from './dist/dom.js';
 import { cards, themes, paletteFor, applyTheme, selectedTheme } from './themes.js';
 const $=id=>document.getElementById(id);
 let theme=selectedTheme();
@@ -23,7 +23,8 @@ function refreshRecipe(){
   $('tone-value').textContent=`${exposure>0?'+':''}${exposure} EV`;
   $('palette-chips').replaceChildren(...themes[theme].colors.map(color=>{const el=document.createElement('span');el.style.background=color;el.title=color;return el;}));
   $('palette-name').textContent=`${themes[theme].name.toUpperCase()} / ${themes[theme].colors.length}`;
-  $('live-code').textContent=`import { observeDitherDOM } from 'ditherto/dom';\n\nconst images = observeDitherDOM('img.dither', {\n  palette: ${JSON.stringify(palette)},\n  algorithm: '${algorithm}',\n  exposure: ${exposure},\n  resample: 'area'\n});\n\n// Fine-tune a single image.\nawait images.images[0].update({ contrast: 1.1 });\n\n// On unmount: images.destroy();`;
+  const blueImport = algorithm.endsWith('-blue-noise') ? "import { registerBlueNoise } from 'ditherto/blue-noise';\nregisterBlueNoise(algorithms);\n" : '';
+  $('live-code').textContent=`import { observeDitherDOM${blueImport ? ', algorithms' : ''} } from 'ditherto/dom';\n${blueImport}\nconst images = observeDitherDOM('img.dither', {\n  palette: ${JSON.stringify(palette)},\n  algorithm: '${algorithm}',\n  exposure: ${exposure},\n  resample: 'area'\n});\n\n// Fine-tune a single image.\nawait images.images[0].update({ contrast: 1.1 });\n\n// On unmount: images.destroy();`;
   $('cli-demo').textContent=`$ node dist/cli.js \\\n  site/tarot/${selectedCard().file} \\\n  --palette '${themes[theme].colors.join(',')}' \\\n  --algorithm ${algorithm} --exposure ${exposure} --json`;
   $('copy-code').textContent='Copy recipe';
   for(const link of document.querySelectorAll('.tarot-link, #open-playground')){
@@ -54,7 +55,14 @@ function bind(){
   // Preserve current controls when returning through the browser's page cache.
   for(const handle of controller.images)void handle.update({exposure:Number($('tone').value)}).catch(report);
 }
-function updateImages(){
+let updateRevision = 0;
+async function updateImages(){
+  const revision = ++updateRevision;
+  if ($('texture').value.endsWith('-blue-noise') && !algorithms.get($('texture').value)) {
+    try { const { registerBlueNoise } = await import('./dist/blue-noise.js'); registerBlueNoise(algorithms); }
+    catch (error) { if (revision === updateRevision) report(error); return; }
+  }
+  if (revision !== updateRevision) return;
   refreshRecipe();
   $('render-state').textContent='RENDERING';
   for(const handle of controller?.images??[])void handle.update({palette:paletteFor(theme),algorithm:$('texture').value,exposure:Number($('tone').value)}).catch(report);

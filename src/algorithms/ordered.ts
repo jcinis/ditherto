@@ -2,7 +2,8 @@ import type { ColorRGB, DitherAlgorithm } from '../types.js';
 import { findClosestColor } from '../palette/utils.js';
 import { fillBlock, prepare, sampleIndex } from './shared.js';
 
-const BAYER = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5] as const;
+import { optionKeys } from '../algorithmOptions.js';
+import { bayerSize, bayerThreshold, type Threshold } from './bayer.js';
 const dot = (a: ColorRGB, b: ColorRGB) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
 const subtract = (a: ColorRGB, b: ColorRGB): ColorRGB => [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
 const key = (color: ColorRGB) => color[0] * 65536 + color[1] * 256 + color[2];
@@ -48,23 +49,33 @@ function choose(pixel: ColorRGB, palette: readonly ColorRGB[], threshold: number
   return amount > threshold ? high : low;
 }
 
-export const orderedAlgorithm: DitherAlgorithm = {
-  name: 'ordered',
-  apply(data, palette, step) {
-    const result = prepare(data, palette, step);
-    for (let y = 0; y < data.height; y += step) {
-      for (let x = 0; x < data.width; x += step) {
-        const i = sampleIndex(data, x, y, step);
-        if (i < 0) continue;
-        const threshold = (BAYER[((y / step) % 4) * 4 + ((x / step) % 4)]! + 0.5) / 16;
-        const color = choose(
-          [data.data[i]!, data.data[i + 1]!, data.data[i + 2]!],
-          palette,
-          threshold
-        );
-        fillBlock(result, x, y, step, color);
+export function createOrderedAlgorithm(name = 'ordered', thresholdAt?: Threshold): DitherAlgorithm {
+  return {
+    name,
+    validateOptions(options) {
+      optionKeys(options, thresholdAt ? [] : ['bayerSize']);
+      if (!thresholdAt) bayerSize(options);
+    },
+    apply(data, palette, step, options = {}) {
+      optionKeys(options, thresholdAt ? [] : ['bayerSize']);
+      const thresholdFor = thresholdAt ?? bayerThreshold(bayerSize(options));
+      const result = prepare(data, palette, step);
+      for (let y = 0; y < data.height; y += step) {
+        for (let x = 0; x < data.width; x += step) {
+          const i = sampleIndex(data, x, y, step);
+          if (i < 0) continue;
+          const threshold = thresholdFor(x / step, y / step);
+          const color = choose(
+            [data.data[i]!, data.data[i + 1]!, data.data[i + 2]!],
+            palette,
+            threshold
+          );
+          fillBlock(result, x, y, step, color);
+        }
       }
-    }
-    return result;
-  },
-};
+      return result;
+    },
+  };
+}
+
+export const orderedAlgorithm = createOrderedAlgorithm();

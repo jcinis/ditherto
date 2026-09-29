@@ -12,12 +12,20 @@ import { realpathSync } from 'node:fs';
 import { encodePng } from './node.js';
 import { ditherToImageData, validateOptions } from './imageProcessor.js';
 import type { DitherOptions, ColorRGB } from './types.js';
+import { algorithms } from './algorithmRegistry.js';
+import { registerBlueNoise } from './blue-noise.js';
 import { PALETTES } from './palette/utils.js';
 
 export interface CliArgs {
   input: string;
   output: string | undefined;
-  algorithm: 'atkinson' | 'floyd-steinberg' | 'ordered' | undefined;
+  algorithm: DitherOptions['algorithm'];
+  bayerSize?: number;
+  serpentine?: boolean;
+  cellSize?: number;
+  history?: number;
+  strength?: number;
+  candidates?: number;
   resample?: DitherOptions['resample'];
   paletteImg: string | undefined;
   palette?: string;
@@ -40,12 +48,33 @@ function parseNumber(value: string | undefined, label: string): number | undefin
   return Number(value);
 }
 
+function parseAlgorithmFlags(result: CliArgs, values: Readonly<Record<string, unknown>>): void {
+  if (typeof values.serpentine === 'boolean') result.serpentine = values.serpentine;
+  const flags = {
+    strength: 'strength',
+    candidates: 'candidates',
+    bayerSize: 'bayer-size',
+    cellSize: 'cell-size',
+    history: 'history',
+  } as const;
+  for (const key of Object.keys(flags) as (keyof typeof flags)[]) {
+    const value = values[flags[key]];
+    if (typeof value === 'string') result[key] = parseNumber(value, flags[key])!;
+  }
+}
+
 export function parseCliArgs(args: string[]): CliArgs {
   const { values, positionals } = parseArgs({
     args,
     options: {
       output: { type: 'string', short: 'o' },
       algorithm: { type: 'string' },
+      strength: { type: 'string' },
+      candidates: { type: 'string' },
+      'bayer-size': { type: 'string' },
+      serpentine: { type: 'boolean' },
+      'cell-size': { type: 'string' },
+      history: { type: 'string' },
       paletteimg: { type: 'string' },
       palette: { type: 'string' },
       json: { type: 'boolean' },
@@ -83,6 +112,7 @@ export function parseCliArgs(args: string[]): CliArgs {
     version: values.version,
   };
 
+  parseAlgorithmFlags(result, values);
   if (values.exposure !== undefined) result.exposure = parseNumber(values.exposure, 'Exposure')!;
   if (values.palette !== undefined) result.palette = values.palette;
   if (values.json !== undefined) result.json = values.json;
@@ -102,11 +132,15 @@ export function validateCliArgs(args: CliArgs): void {
     throw new Error('Input file is required');
   }
 
-  if (args.algorithm && !['atkinson', 'floyd-steinberg', 'ordered'].includes(args.algorithm)) {
-    throw new Error('Invalid algorithm. Must be: atkinson, floyd-steinberg, or ordered');
-  }
+  if (args.algorithm === 'ordered-blue-noise' || args.algorithm === 'knoll-blue-noise')
+    registerBlueNoise(algorithms);
+  if (args.algorithm && !algorithms.get(args.algorithm))
+    throw new Error(`Invalid algorithm: ${args.algorithm}`);
 
-  if (args.palette !== undefined && (args.paletteImg !== undefined || args.paletteColors !== undefined))
+  if (
+    args.palette !== undefined &&
+    (args.paletteImg !== undefined || args.paletteColors !== undefined)
+  )
     throw new Error('Use either --palette or --paletteimg/--palette-colors');
   validateOptions(buildDitherOptions(args));
 }
@@ -120,7 +154,13 @@ Usage:
 
 Options:
   -o, --output <file>     Output file path
-  --algorithm <name>      Dither algorithm (atkinson|floyd-steinberg|ordered)
+  --algorithm <name>      Dither algorithm (atkinson|floyd-steinberg|sierra-lite|stucki|ordered|knoll|nearest|halftone|riemersma|ordered-blue-noise|knoll-blue-noise)
+  --bayer-size <n>        Ordered/Knoll Bayer size: 2, 4, 8, 16; default 4
+  --serpentine            Alternate rows for diffusion algorithms
+  --cell-size <n>         Halftone cell: 2–16; default 8; uses palette extremes
+  --history <n>           Riemersma error history: 2–64; default 16
+  --strength <factor>     Knoll only: 0–1, default 0.2 (20%)
+  --candidates <n>        Knoll only: integer 1–256, default 32
   --paletteimg <file>     Swatch or photo for palette extraction
   --palette <name|hexes>  Built-in name or comma-separated #rrggbb colors
                          Names: ${Object.keys(PALETTES).join(', ')}
@@ -164,14 +204,31 @@ async function ensureOutputDirectory(outputPath: string): Promise<void> {
 function parseCliPalette(value: string): readonly ColorRGB[] {
   const name = value.toUpperCase();
   if (Object.hasOwn(PALETTES, name)) return PALETTES[name as keyof typeof PALETTES];
-  const colors = value.split(',').map(color => color.trim());
-  if (colors.length > 256 || colors.some(color => !/^#[0-9a-f]{6}$/i.test(color)))
+  const colors = value.split(',').map((color) => color.trim());
+  if (colors.length > 256 || colors.some((color) => !/^#[0-9a-f]{6}$/i.test(color)))
     throw new Error('Palette must be a built-in name or 1–256 comma-separated #rrggbb colors');
-  return colors.map(color => [
-    Number.parseInt(color.slice(1, 3), 16),
-    Number.parseInt(color.slice(3, 5), 16),
-    Number.parseInt(color.slice(5, 7), 16),
-  ] as const);
+  return colors.map(
+    (color) =>
+      [
+        Number.parseInt(color.slice(1, 3), 16),
+        Number.parseInt(color.slice(3, 5), 16),
+        Number.parseInt(color.slice(5, 7), 16),
+      ] as const
+  );
+}
+
+function addAlgorithmOptions(args: CliArgs, options: DitherOptions): void {
+  const config: Record<string, unknown> = {};
+  for (const key of [
+    'strength',
+    'candidates',
+    'bayerSize',
+    'serpentine',
+    'cellSize',
+    'history',
+  ] as const)
+    if (args[key] !== undefined) config[key] = args[key];
+  if (Object.keys(config).length) options.algorithmOptions = config;
 }
 
 /**
@@ -181,6 +238,7 @@ function buildDitherOptions(args: CliArgs): DitherOptions {
   const options: DitherOptions = {};
 
   if (args.algorithm) options.algorithm = args.algorithm;
+  addAlgorithmOptions(args, options);
   if (args.palette !== undefined) options.palette = parseCliPalette(args.palette);
   if (args.resample !== undefined) options.resample = args.resample;
   if (args.paletteImg) options.paletteImg = args.paletteImg;
@@ -209,9 +267,11 @@ export async function processFiles(args: CliArgs): Promise<void> {
   try {
     const result = await ditherToImageData(args.input, buildDitherOptions(args));
     await writeFile(output, encodePng(result));
-    console.log(args.json
-      ? JSON.stringify({ input: args.input, output, width: result.width, height: result.height })
-      : `Processed: ${args.input} -> ${output}`);
+    console.log(
+      args.json
+        ? JSON.stringify({ input: args.input, output, width: result.width, height: result.height })
+        : `Processed: ${args.input} -> ${output}`
+    );
   } catch (error) {
     throw new Error(
       `Failed to process ${args.input}: ${error instanceof Error ? error.message : String(error)}`

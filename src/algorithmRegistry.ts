@@ -1,6 +1,6 @@
 /**
  * Registry for dithering algorithms
- * 
+ *
  * Provides pluggable algorithm system with built-in algorithms
  */
 
@@ -45,7 +45,20 @@ export const algorithms = new AlgorithmRegistry();
 import { atkinsonAlgorithm } from './algorithms/atkinson.js';
 import { floydSteinbergAlgorithm } from './algorithms/floydSteinberg.js';
 import { orderedAlgorithm } from './algorithms/ordered.js';
+import { knollAlgorithm } from './algorithms/knoll.js';
+import { nearestAlgorithm } from './algorithms/nearest.js';
 
 algorithms.register(atkinsonAlgorithm);
 algorithms.register(floydSteinbergAlgorithm);
 algorithms.register(orderedAlgorithm);
+algorithms.register(knollAlgorithm);
+algorithms.register(nearestAlgorithm);
+
+import { sierraLiteAlgorithm } from './algorithms/sierraLite.js';
+import { stuckiAlgorithm } from './algorithms/stucki.js';
+import { halftoneAlgorithm } from './algorithms/halftone.js';
+import { riemersmaAlgorithm } from './algorithms/riemersma.js';
+algorithms.register(sierraLiteAlgorithm);
+algorithms.register(stuckiAlgorithm);
+algorithms.register(halftoneAlgorithm);
+algorithms.register(riemersmaAlgorithm);

@@ -2,9 +2,11 @@
 
 Dither images into a fixed palette, with optional resizing and tone adjustments. A TypeScript library for browsers, workers and Node, with a small PNG CLI and interactive examples.
 
-Three algorithms: **Atkinson**, **Floyd–Steinberg**, and deterministic **4×4 Bayer ordered dithering**. Bring your own palette or use black/white, monochrome red/green/blue/yellow, Game Boy, CGA, RGB, or 16-level grayscale.
+Nine core algorithms: **Atkinson**, **Floyd–Steinberg**, **Sierra Lite**, **Stucki**, **Bayer ordered dithering**, **Knoll**, **Halftone**, **Riemersma**, and **Nearest color**. Two additional **blue-noise** variants are available through the optional `ditherto/blue-noise` entry. Bring your own palette or use black/white, monochrome red/green/blue/yellow, Game Boy, CGA, RGB, or 16-level grayscale.
 
 [Homepage](https://jcinis.github.io/ditherto/) · [Image playground](https://jcinis.github.io/ditherto/playground.html) · [Algorithm gallery](https://jcinis.github.io/ditherto/algorithms.html) · [CLI guide](#cli-for-people-and-agents) · [API](#api)
+
+This README follows `main`. The expanded algorithm collection is available in the website and source build; it is not included in the published `0.1.0` npm package. A subsequent npm release will include these additions.
 
 ![Coffee photograph beside actual Atkinson output using four colors](https://raw.githubusercontent.com/jcinis/ditherto/main/site/assets/hero.png)
 
@@ -12,7 +14,7 @@ Three algorithms: **Atkinson**, **Floyd–Steinberg**, and deterministic **4×4 
 
 ## Try it
 
-Open either playground above—no account or installation. Images stay on your device. The image playground exports PNGs, JavaScript and a matching CLI command. The Arcana site includes five tarot studies, Orchid, Amber, Moss, Game Boy, Blue Mono, and black-and-white Mono themes, and live rendering from the originals as the layout changes. The tarot examples use compact full-color WebP sources for faster loading, with the PNG masters preserved in the repository. Orchid is the default; your selected theme carries between the example pages. The algorithm gallery compares all five algorithms on the same image with shared palette and tone controls, automatic rerendering, and original/processed toggling.
+Open either playground above—no account or installation. Images stay on your device. The image playground exports PNGs, JavaScript and a matching CLI command. The Arcana site includes five tarot studies, Orchid, Amber, Moss, Game Boy, Blue Mono, and black-and-white Mono themes, and live rendering from the originals as the layout changes. The tarot examples use compact full-color WebP sources for faster loading, with the PNG masters preserved in the repository. Orchid is the default; your selected theme carries between the example pages. The algorithm gallery compares all eleven algorithms in large preview cards. Upload an image or choose a tarot study, adjust shared palette and tone controls, and tune Bayer size, Knoll strength, serpentine scanning, halftone cells, or Riemersma history by family. Inspect and download individual results at 1× or 2×, toggle originals, or carry a sample and its settings into the playground. Resizing rerenders from the original.
 
 Install the library in your project:
 
@@ -182,7 +184,8 @@ Decoded format support depends on the host browser or Node canvas decoder. Anima
 
 | Option | Default | Behavior |
 | --- | --- | --- |
-| `algorithm` | `'atkinson'` | Built-in name or a registered custom algorithm |
+| `algorithm` | `'atkinson'` | Any core algorithm listed below, or an explicitly registered optional/custom algorithm |
+| `algorithmOptions` | Algorithm defaults | Per-algorithm settings listed below; unsupported keys and values are rejected |
 | `palette` | `PALETTES.BW` | Readonly RGB triples, integer channels 0–255 |
 | `paletteImg` | — | Palette swatch or reference photo; explicit `palette` takes precedence |
 | `paletteColors` | — | Quantize `paletteImg` to at most 1–256 representative colors; omitted means exact extraction |
@@ -216,7 +219,7 @@ const pixels = await ditherToImageData(originalImage, {
 });
 ```
 
-These are ordinary palettes, available from the main, browser and DOM entries, and work with all three algorithms. Both examples include them in the palette menu. They use the existing RGB color matching, with no grayscale conversion or extra effect. Bright green and yellow produce lighter marks on white; use a custom darker ink color if you want stronger contrast. Transparency is preserved, so white is a palette color rather than a background compositing operation.
+These are ordinary palettes, available from the main, browser and DOM entries, and work with all algorithms (halftone uses the darkest/lightest pair). Both examples include them in the palette menu. They use the existing RGB color matching, with no grayscale conversion or extra effect. Bright green and yellow produce lighter marks on white; use a custom darker ink color if you want stronger contrast. Transparency is preserved, so white is a palette color rather than a background compositing operation.
 
 ### `ditherImage(input, options?)`
 
@@ -280,6 +283,86 @@ The values above illustrate configuration, not recommended settings for every po
 
 The same API supports browser, worker, server and build-time workflows. Callers control scheduling and caching. Determinism applies to identical decoded RGBA input and settings; host image decoders can differ.
 
+### Algorithm settings
+
+| Algorithm | `algorithmOptions` | Defaults |
+| --- | --- | --- |
+| `atkinson`, `floyd-steinberg`, `sierra-lite`, `stucki` | `serpentine: boolean` | `false` |
+| `ordered` | `bayerSize: 2, 4, 8, 16` | `4` |
+| `knoll` | `bayerSize`, `strength: 0–1`, `candidates: 1–256` | `4`, `0.2`, `32` |
+| `halftone` | `cellSize: 2–16` (integer) | `8` |
+| `riemersma` | `history: 2–64` (integer) | `16` |
+| `nearest` | None | — |
+| `ordered-blue-noise` (optional) | None; fixed 64×64 mask | — |
+| `knoll-blue-noise` (optional) | `strength`, `candidates` | `0.2`, `32` |
+
+Settings are validated by the selected algorithm. Unknown keys, wrong types and out-of-range values
+throw before image decoding. Matrix and cell sizes are in logical pixels, so `step` enlarges them.
+Existing algorithms retain their previous defaults and output. The CLI equivalents are `--serpentine`,
+`--bayer-size`, `--strength`, `--candidates`, `--cell-size`, and `--history`.
+
+Halftone averages each cell and draws clustered dots with the darkest and lightest palette colors.
+With more than two palette entries it emits one `console.warn` per render describing the selected
+colors; it never fails solely because there are extra colors. The CLI sends that warning to stderr,
+so `--json` stdout stays machine-readable. Fewer than two distinct colors is an error.
+
+```ts
+await ditherToImageData(originalImage, {
+  algorithm: 'stucki', algorithmOptions: { serpentine: true }, palette: PALETTES.GAMEBOY,
+});
+```
+
+Blue noise is opt-in to keep its mask out of the core bundle:
+
+```ts
+import { algorithms, ditherToImageData } from 'ditherto/browser';
+import { registerBlueNoise } from 'ditherto/blue-noise';
+registerBlueNoise(algorithms);
+const pixels = await ditherToImageData(originalImage, {
+  algorithm: 'knoll-blue-noise', algorithmOptions: { strength: 0.2, candidates: 32 },
+});
+```
+
+Use `algorithms` from **the same entry point that renders**: `ditherto`, `ditherto/browser`, or
+`ditherto/dom`. Importing the optional module alone has no registry side effects. Register it within
+any worker that renders blue noise. The CLI handles registration automatically; the playground loads
+the module only when selected. Direct algorithm objects are also exported for custom registries.
+
+See [algorithm contracts and release validation](ALGORITHMS.md) for alpha behavior, palette ordering,
+performance limits, blue-noise provenance, and reproducible checks.
+
+### Knoll and nearest-color mapping
+
+Knoll uses multiple palette-color candidates per pixel, sampled through a deterministic Bayer pattern (4×4 by default). Its default is **20% strength and 32 candidate selections**. Lower strength gives flatter color; higher strength gives more texture. More candidates refine the color mixture but cost more processing time. Run larger interactive jobs in a worker.
+
+```ts
+const pixels = await ditherToImageData(originalImage, {
+  algorithm: 'knoll',
+  algorithmOptions: { strength: 0.2, candidates: 32 },
+  palette: PALETTES.GAMEBOY,
+});
+```
+
+`strength` ranges from 0 to 1; `candidates` is an integer from 1 to 256. Both are optional. They control Knoll and Knoll blue noise; passing them to another built-in throws an error. The exported `KnollOptions` type describes these settings. The open `AlgorithmOptions` record supports custom algorithms; validation is performed at runtime by the selected algorithm.
+
+Choose `algorithm: 'nearest'` for flat palette mapping with no dithering. It matches Knoll at zero strength exactly, including palette-order ties, alpha and pixel blocks. `nearest` here selects a color-mapping algorithm; `resample: 'nearest'` separately controls image resizing.
+
+```sh
+npx ditherto photo.jpg -o knoll.png --algorithm knoll --strength 0.2 --candidates 32 --palette GAMEBOY
+npx ditherto photo.jpg -o flat.png --algorithm nearest --palette GAMEBOY
+```
+
+The CLI's `--strength` and `--candidates` flags require `--algorithm knoll` or `--algorithm knoll-blue-noise`. The playground reveals these controls when Knoll is selected and includes them in the copied JavaScript and CLI recipes.
+
+DOM helpers accept the same options. In HTML, use JSON:
+
+```html
+<img class="dither" src="photo.png" data-algorithm="knoll"
+     data-algorithm-options='{"strength":0.2,"candidates":32}'>
+```
+
+Responsive updates replace the complete `algorithmOptions` object rather than merging its keys. When switching from Knoll to another algorithm, clear the override with `algorithmOptions: undefined` (or supply `{}` to override inherited settings).
+
 ### `algorithms.register(algorithm)`
 
 ```ts
@@ -293,6 +376,8 @@ algorithms.register({
   },
 });
 ```
+
+Custom algorithms can accept an optional fourth argument to `apply(data, palette, step, options)` and opt into configuration with `validateOptions(options)`. An optional `validatePalette(palette)` hook enforces palette constraints before processing (and before input decoding for explicit palettes). The hook receives explicitly supplied options before image loading; throw on unsupported keys or values. Without a validation hook, nonempty `algorithmOptions` are rejected. Existing three-argument implementations remain compatible.
 
 The pipeline isolates input pixels before invoking plugins. `algorithms.list()` lists registered names. Palette order breaks nearest-color ties deterministically.
 
@@ -346,13 +431,15 @@ Each controller has one resize observer and a serial render queue. Updates are c
 
 Call `handle.destroy()` for one image or `gallery.destroy()` for the group. Disposal rejects pending per-image calls with `AbortError`, releases cached pixels and prevents late results from painting. It does not stop computations already running in an injected renderer. DOM removal alone does not dispose a binding; framework integrations should call `destroy()` on unmount.
 
-The default renderer runs on the calling thread, yielding between images. For expensive interactive processing, supply `render(source, options): Promise<ImageData>` backed by a worker. It receives an isolated pixel copy that may be transferred or modified. One worker can serve the whole group: see [the algorithm gallery](https://jcinis.github.io/ditherto/algorithms.html) and [its shared-worker wiring](https://github.com/jcinis/ditherto/blob/main/site/algorithms.js). Worker lifetime belongs to the caller. The gallery uses a different algorithm per image with shared palette and tone controls, layout resizing, and original/processed toggling.
+The default renderer runs on the calling thread, yielding between images. For expensive interactive processing, supply `render(source, options): Promise<ImageData>` backed by a worker. It receives an isolated pixel copy that may be transferred or modified. One worker can serve the whole group: see [the algorithm gallery](https://jcinis.github.io/ditherto/algorithms.html) and [its shared-worker wiring](https://github.com/jcinis/ditherto/blob/main/site/algorithms.js). Worker lifetime belongs to the caller. The gallery uses a different algorithm and settings per image, with shared palette and tone controls, layout resizing, uploads, original/processed toggling, and a pixel inspector. Its copied recipe includes each algorithm’s settings and the optional blue-noise registration.
 
 ## Algorithm behavior
 
-- **Floyd–Steinberg:** left-to-right raster scan; error weights 7/16 right, 3/16 below-left, 5/16 below, 1/16 below-right. Unclamped floating-point error buffers avoid intermediate byte rounding.
+- **Floyd–Steinberg:** left-to-right by default, optionally serpentine; error weights 7/16 right, 3/16 below-left, 5/16 below, 1/16 below-right. Unclamped floating-point error buffers avoid intermediate byte rounding.
 - **Atkinson:** six forward neighbors each receive 1/8 of the error; 1/4 is intentionally discarded. The diffusion implementations use only a few rows of scratch memory.
-- **Ordered:** a fixed 4×4 Bayer matrix with centered thresholds `(rank + 0.5) / 16`. Black/white follows ordinary intensity thresholding. Arbitrary palettes use a documented extension: find the nearest color, choose the best RGB segment from it to another palette color, and use the threshold to select between them. Exact palette colors remain unchanged. This is deterministic, not randomized noise.
+- **Ordered:** a configurable Bayer matrix (2, 4, 8 or 16 per side; default 4) with centered thresholds `(rank + 0.5) / (size * size)`. Black/white follows ordinary intensity thresholding. Arbitrary palettes use a documented extension: find the nearest color, choose the best RGB segment from it to another palette color, and use the threshold to select between them. Exact palette colors remain unchanged. This is deterministic, not randomized noise.
+
+Additional algorithm contracts and performance notes are in [ALGORITHMS.md](ALGORITHMS.md).
 
 See [the design audit](https://github.com/jcinis/ditherto/blob/main/DESIGN_AUDIT.md) for references, compatibility changes, findings and remaining work.
 

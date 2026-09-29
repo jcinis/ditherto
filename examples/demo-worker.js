@@ -1,9 +1,11 @@
-import { ditherToImageData, generatePalette } from '../dist/browser.js';
+import { ditherToImageData, generatePalette, algorithms } from '../dist/browser.js';
 let source;
 let reference;
 // Cache only the most recent palette for each source; resizing/tone changes reuse it.
 const cache = new Map();
-self.onmessage = async ({ data: message }) => {
+let jobs=Promise.resolve();
+self.onmessage = ({ data: message }) => { jobs=jobs.then(()=>processMessage(message)); };
+async function processMessage(message) {
   if (message.type === 'source') {
     source = message.image;
     cache.delete('PHOTO');
@@ -16,6 +18,10 @@ self.onmessage = async ({ data: message }) => {
   }
   const { id, options, paletteMode, paletteColors } = message;
   try {
+    if (options.algorithm?.endsWith('-blue-noise') && !algorithms.get(options.algorithm)) {
+      const { registerBlueNoise } = await import('../dist/blue-noise.js');
+      registerBlueNoise(algorithms);
+    }
     if (!source) throw new Error('Choose an image first');
     const image = source;
     const start = performance.now();
@@ -35,4 +41,4 @@ self.onmessage = async ({ data: message }) => {
   } catch (error) {
     self.postMessage({ id, error: error.message });
   }
-};
+}

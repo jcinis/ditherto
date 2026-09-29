@@ -1,3 +1,4 @@
+import { algorithmDescriptions, setupAlgorithmControls, updateAlgorithmControls, selectedAlgorithmOptions, algorithmFlags, recipeImport } from './algorithm-controls.js';
 import { PALETTES, loadImageData } from '../dist/browser.js';
 
 const $ = (id) => document.getElementById(id);
@@ -15,7 +16,9 @@ const palettes = {
 const descriptions = {
   atkinson: 'Airy texture with a little extra contrast.',
   'floyd-steinberg': 'Fine, flowing texture with smooth tonal transitions.',
-  ordered: 'A repeating 4 × 4 pattern. Always exactly reproducible.',
+  ...algorithmDescriptions,
+  knoll: 'Ordered texture with multi-color mixtures and adjustable strength.',
+  nearest: 'Flat palette colors with hard transitions. No dithering.',
 };
 let source;
 let loadId = 0;
@@ -64,6 +67,7 @@ function options() {
     throw new Error('Choose an output width between 1 and 2048 pixels.');
   return {
     algorithm: $('algorithm').value,
+    ...selectedAlgorithmOptions(),
     palette: readPalette(),
     width,
     step: Number($('step').value),
@@ -76,10 +80,12 @@ function updateRecipe(value) {
   const palette = $('palette').value;
   const paletteCode = palette in PALETTES ? `PALETTES.${palette}` : JSON.stringify(value.palette);
   const paletteNote = ['PHOTO', 'REFERENCE'].includes(palette) ? '// Extracted palette is embedded below so this recipe is self-contained.\n' : '';
-  recipe = `import { ditherToImageData, PALETTES } from 'ditherto/browser';\n\n${paletteNote}const pixels = await ditherToImageData(originalImage, {\n  algorithm: '${value.algorithm}',\n  palette: ${paletteCode},\n  width: ${value.width},\n  resample: '${value.resample}',\n  step: ${value.step},\n  exposure: ${value.exposure},\n  contrast: ${value.contrast},\n});\n\ncanvas.width = pixels.width;\ncanvas.height = pixels.height;\ncanvas.getContext('2d').putImageData(pixels, 0, 0);`;
+  const algorithmCode = value.algorithmOptions ? `  algorithmOptions: ${JSON.stringify(value.algorithmOptions)},\n` : '';
+  recipe = `${recipeImport(value.algorithm)}${paletteNote}const pixels = await ditherToImageData(originalImage, {\n  algorithm: '${value.algorithm}',\n${algorithmCode}  palette: ${paletteCode},\n  width: ${value.width},\n  resample: '${value.resample}',\n  step: ${value.step},\n  exposure: ${value.exposure},\n  contrast: ${value.contrast},\n});\n\ncanvas.width = pixels.width;\ncanvas.height = pixels.height;\ncanvas.getContext('2d').putImageData(pixels, 0, 0);`;
   $('recipe').textContent = recipe;
   const paletteArgument = palette in PALETTES ? palette : value.palette.map(rgb => '#' + rgb.map(channel => channel.toString(16).padStart(2,'0')).join('')).join(',');
-  cliRecipe = `npx ditherto input.jpg -o output.png --algorithm ${value.algorithm} --palette '${paletteArgument}' --width ${value.width} --resample ${value.resample} --step ${value.step} --exposure ${value.exposure} --contrast ${value.contrast} --json`;
+  const flags = algorithmFlags(value.algorithmOptions);
+  cliRecipe = `npx ditherto input.jpg -o output.png --algorithm ${value.algorithm}${flags} --palette '${paletteArgument}' --width ${value.width} --resample ${value.resample} --step ${value.step} --exposure ${value.exposure} --contrast ${value.contrast} --json`;
   $('cliRecipe').textContent = cliRecipe;
 }
 function dispatch() {
@@ -96,6 +102,8 @@ function schedule() {
   $('download').disabled = true;
   $('copy').disabled = true;
   $('copyCli').disabled = true;
+  updateAlgorithmControls();
+  $('knollStrengthValue').textContent = `${$('knollStrength').value}%`;
   $('photoPaletteControls').hidden = !['PHOTO', 'REFERENCE'].includes($('palette').value);
   $('paletteFileControls').hidden = $('palette').value !== 'REFERENCE';
   $('customLabel').hidden = $('palette').value !== 'CUSTOM';
@@ -311,7 +319,8 @@ $('paletteImageInput').addEventListener('change', async (event) => {
     }
   }
 });
-for (const id of ['algorithm', 'palette', 'customPalette', 'step', 'resample', 'paletteColors', 'exposure', 'contrast'])
+setupAlgorithmControls(schedule);
+for (const id of ['algorithm', 'knollStrength', 'knollCandidates', 'palette', 'customPalette', 'step', 'resample', 'paletteColors', 'exposure', 'contrast'])
   $(id).addEventListener('input', schedule);
 for (const id of ['width', 'widthNumber'])
   $(id).addEventListener('input', () => {
