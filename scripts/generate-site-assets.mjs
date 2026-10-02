@@ -29,3 +29,5 @@ console.log('Generated real photographic examples in site/assets.');
 
 await import('./generate-tarot-previews.mjs');
 await import('./generate-social-preview.mjs');
+
+await import('./generate-why-assets.mjs');

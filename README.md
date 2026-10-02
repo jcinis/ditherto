@@ -4,7 +4,7 @@ Dither images into a fixed palette, with optional resizing and tone adjustments.
 
 Nine core algorithms: **Atkinson**, **Floyd–Steinberg**, **Sierra Lite**, **Stucki**, **Bayer ordered dithering**, **Knoll**, **Halftone**, **Riemersma**, and **Nearest color**. Two additional **blue-noise** variants are available through the optional `ditherto/blue-noise` entry. Bring your own palette or use black/white, monochrome red/green/blue/yellow, Game Boy, CGA, RGB, or 16-level grayscale.
 
-[Homepage](https://jcinis.github.io/ditherto/) · [Image playground](https://jcinis.github.io/ditherto/playground.html) · [Algorithm gallery](https://jcinis.github.io/ditherto/algorithms.html) · [CLI guide](#cli-for-people-and-agents) · [API](#api)
+[Homepage](https://jcinis.github.io/ditherto/) · [Image playground](https://jcinis.github.io/ditherto/playground.html) · [Algorithm gallery](https://jcinis.github.io/ditherto/algorithms.html) · [Why render live?](https://jcinis.github.io/ditherto/why.html) · [CLI guide](#cli-for-people-and-agents) · [API](#api)
 
 This README follows `main`. The expanded algorithm collection is available in the website and source build; it is not included in the published `0.1.0` npm package. A subsequent npm release will include these additions.
 
@@ -42,6 +42,8 @@ npm run demo
 The last command starts a local server at `http://127.0.0.1:4173`; the homepage is at `/index.html`. For a local package you can install into another project, run `npm pack`, then `npm install /path/to/ditherto-0.1.0.tgz` in that project.
 
 See the [npm package](https://www.npmjs.com/package/ditherto) and [release procedure](https://github.com/jcinis/ditherto/blob/main/docs/RELEASING.md).
+
+The [Why page](https://jcinis.github.io/ditherto/why.html) puts an original, a live dither, and a pre-exported 320px PNG in one responsive row. Resize the comparison to see the difference between rebuilding the dot pattern and scaling an existing one; a pixelated-CSS toggle demonstrates the alternative of retaining hard edges on the fixed export.
 
 ## CLI for people and agents
 

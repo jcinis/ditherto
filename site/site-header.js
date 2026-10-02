@@ -5,6 +5,7 @@ const page = header.dataset.page;
 header.innerHTML = `
   <a class="wordmark" href="./index.html" aria-label="dither·to home"><span class="mark" aria-hidden="true"></span>dither·to</a>
   <nav aria-label="Main navigation">
+    <a href="./why.html"${page === 'why' ? ' aria-current="page"' : ''}>[ why ]</a>
     <a href="./playground.html"${page === 'playground' ? ' aria-current="page"' : ''}>[ playground ]</a>
     <a href="${page === 'home' ? '#collection' : './index.html#collection'}">[ collection ]</a>
     <a href="./algorithms.html"${page === 'algorithms' ? ' aria-current="page"' : ''}>[ algorithms ]</a>
