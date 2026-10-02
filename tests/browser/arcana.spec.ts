@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 import { createHash } from 'node:crypto';
 import { ditherToImageData, loadImageData, algorithms as registry } from '../../dist/index.js';
 import { registerBlueNoise } from '../../dist/blue-noise.js';
@@ -13,6 +13,12 @@ async function matchesOriginal(canvas, file, options) {
   const width = await canvas.evaluate(c=>c.parentElement.clientWidth);
   const pixels = await ditherToImageData(`site/tarot/${file}`,{width,resample:'area',...options});
   await expect.poll(()=>hash(canvas)).toBe(createHash('sha256').update(pixels.data).digest('hex'));
+}
+
+async function expectGalleryRendered(page: Page) {
+  // Eleven images render sequentially through one worker. Allow cold CI startup and CPU contention
+  // without relaxing pixel assertions or adding retries to unrelated tests.
+  await expect(page.locator('.gallery canvas')).toHaveCount(11, {timeout: 15_000});
 }
 
 test('Arcana rerenders original cards and preserves composited palette colors at multiple densities', async ({browser,baseURL},testInfo) => {
@@ -75,14 +81,14 @@ test('Arcana themes and settings carry to both playgrounds; recipes start expand
   await page.getByRole('button',{name:'Orchid',exact:true}).click();
   await page.getByRole('link',{name:'Compare the algorithms'}).click();
   await expect(page.locator('#colors')).toHaveValue('orchid');
-  await expect(page.locator('.gallery canvas')).toHaveCount(11);
+  await expectGalleryRendered(page);
 });
 
 test('Algorithm gallery compares each renderer and keeps settings through resize, source changes and restore', async ({page}, testInfo) => {
   test.setTimeout(90_000);
   await page.goto('/responsive.html?theme=orchid');
   await expect(page).toHaveURL(/\/algorithms.html\?/);
-  await expect(page.locator('.gallery canvas')).toHaveCount(11);
+  await expectGalleryRendered(page);
   await expect(page.locator('#galleryRecipe')).toBeVisible();
   await expect(page.locator('#galleryRecipe')).toContainText('registerBlueNoise(algorithms)');
   const algorithms=['atkinson','floyd-steinberg','ordered','knoll','sierra-lite','stucki','halftone','riemersma','ordered-blue-noise','knoll-blue-noise','nearest'];
@@ -104,7 +110,7 @@ test('Algorithm gallery compares each renderer and keeps settings through resize
   await page.locator('#source').selectOption('03-the-empress');
   await page.getByRole('button',{name:'Mono',exact:true}).click();
   await page.locator('#toggle').click();
-  await expect(page.locator('.gallery canvas')).toHaveCount(11);
+  await expectGalleryRendered(page);
   await check('03-the-empress.webp',0.8,1.2,'mono');
   await page.screenshot({path:testInfo.outputPath('algorithm-gallery.png'),fullPage:true});
   await page.setViewportSize({width:390,height:844});
@@ -127,7 +133,7 @@ test('Algorithm gallery compares each renderer and keeps settings through resize
 test('Algorithm comparison shares family controls, inspects pixels and preserves settings in playground links', async ({page}) => {
   test.setTimeout(90_000);
   await page.goto('/algorithms.html?theme=blue&bayerSize=8&candidates=64&strength=35&cellSize=12&history=32&serpentine=true&step=2');
-  await expect(page.locator('.gallery canvas')).toHaveCount(11);
+  await expectGalleryRendered(page);
   const settings = [
     ['atkinson', {serpentine:true}], ['floyd-steinberg', {serpentine:true}],
     ['ordered', {bayerSize:8}], ['knoll', {bayerSize:8,candidates:64,strength:0.35}],
@@ -165,7 +171,7 @@ test('Algorithm comparison shares family controls, inspects pixels and preserves
 
 test('Algorithm comparison handles local uploads and the homepage exposes optional algorithms', async ({page}) => {
   await page.goto('/algorithms.html?theme=orchid');
-  await expect(page.locator('.gallery canvas')).toHaveCount(11);
+  await expectGalleryRendered(page);
   await page.locator('#upload').setInputFiles('tests/fixtures/photos/coffee.png');
   await expect(page.locator('#status')).toContainText('coffee.png');
   const canvas = page.locator('.gallery canvas').first();
@@ -187,4 +193,20 @@ test('Algorithm comparison handles local uploads and the homepage exposes option
   await page.locator('#texture').selectOption('stucki');
   await matchesOriginal(page.locator('.hero-card canvas'),'01-the-magician.webp',{palette:paletteFor('mono'),exposure:0.3,algorithm:'stucki'});
   await expect(page.locator('#live-code')).not.toContainText('registerBlueNoise');
+});
+
+
+test('Algorithm gallery waits for a delayed worker before checking rendered pixels', async ({page}) => {
+  test.setTimeout(30_000);
+  await page.route('**/examples/responsive-worker.js', async route => {
+    // A cold worker/network on CI can exceed Playwright's default five-second assertion budget.
+    await new Promise(resolve => setTimeout(resolve, 6_000));
+    if (!page.isClosed()) await route.continue();
+  });
+  await page.goto('/algorithms.html?theme=orchid');
+  await expectGalleryRendered(page);
+  await expect(page.locator('#status')).toContainText('11 renders');
+  await matchesOriginal(page.locator('.gallery canvas').first(), '01-the-magician.webp', {
+    palette: paletteFor('orchid'), algorithm: 'atkinson', exposure: 0.3,
+  });
 });
