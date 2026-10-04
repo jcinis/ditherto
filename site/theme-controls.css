@@ -48,8 +48,9 @@ input[type="range"]::-moz-range-thumb {
   box-shadow: 0 0 0 1px var(--ink);
 }
 input[type="range"]:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
-/* Extend the card-stage dot grid into the collection and playground introductions. */
-.collection, .use-section, .page-intro {
+/* One continuous dot grid behind the entire page. */
+body {
+  min-height: 100vh;
   background-image: radial-gradient(color-mix(in srgb, var(--line) 35%, transparent) .65px, transparent .8px);
   background-size: 20px 20px;
 }

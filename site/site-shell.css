@@ -1,7 +1,8 @@
 /* Homepage-derived layout and typography shared by all three public pages. */
 :root{font-size:13px;line-height:1.65}
 .topbar{display:flex;align-items:center;justify-content:space-between;gap:24px;padding:18px 3.5%;border-bottom:1px solid var(--line);font-size:11px;background:var(--panel)}.wordmark{display:inline-flex;align-items:center;gap:12px;font-size:21px;font-weight:bold;letter-spacing:-1px;white-space:nowrap}.muted{color:var(--muted)}nav{display:flex;gap:22px;flex-wrap:wrap}nav a{display:flex;align-items:center;min-height:40px}.theme-picker{display:flex;flex-wrap:wrap;gap:4px}.theme-picker button{font-size:10px;display:flex;align-items:center;gap:7px;padding:9px;background:transparent;border-color:transparent;min-height:40px}.theme-picker button[aria-pressed=true]{border-color:var(--accent);color:var(--accent)}.theme-picker span{width:8px;height:8px;background:var(--chip)}main{max-width:1460px;margin:auto;padding:0 4.5%}.edition{display:flex;justify-content:space-between;gap:18px;padding:20px 0;border-bottom:1px solid var(--line);font-size:9px;letter-spacing:1.5px;color:var(--muted)}.edition span:first-child{color:var(--accent)}.live-dot{display:inline-block;width:5px;height:5px;background:var(--accent);margin-right:8px;vertical-align:middle}
-.topbar{margin:0;height:auto;max-width:none}
+html{scroll-padding-top:calc(var(--header-height, 80px) + 16px)}
+.topbar{position:sticky;top:0;z-index:4;margin:0;height:auto;max-width:none}
 .topbar a{text-decoration:none}
 .topbar nav a[aria-current="page"]{color:var(--accent);text-decoration:underline;text-underline-offset:5px}
 .topbar button{font-family:inherit;line-height:1.65;border:1px solid transparent;border-radius:0;cursor:pointer}

@@ -1,9 +1,9 @@
 import './site-header.js';
-import {themes,cards,applyTheme,selectedTheme} from './themes.js';
+import {themes,imageSources,applyTheme,selectedTheme} from './themes.js';
 const params=new URLSearchParams(location.search);
 const theme=selectedTheme();
-const card=cards.find(card=>card.id===params.get('card'))??cards[1];
-document.body.dataset.initialSample=card.id;
+const source=imageSources.find(source=>source.id===params.get('card'));
+document.body.dataset.initialSample=source?.id??'01-the-magician';
 const algorithm=params.get('algorithm');
 if(['atkinson','floyd-steinberg','ordered','knoll','nearest'].includes(algorithm))document.getElementById('algorithm').value=algorithm;
 const exposure=Number(params.get('exposure')??0.3);

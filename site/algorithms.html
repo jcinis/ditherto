@@ -25,8 +25,7 @@
   <a class="skip" href="#main">Skip to content</a>
   <header class="topbar" data-page="algorithms"></header>
   <main id="main">
-    <div class="edition"><span><i class="live-dot"></i> DITHER·TO / ALGORITHM GALLERY</span><span>ONE IMAGE / ELEVEN ALGORITHMS / YOUR PALETTE</span></div>
-    <div class="page-intro"><div><p class="eyebrow">SAME IMAGE. DIFFERENT PERSONALITIES.</p><h1>Find your<br>kind of texture.</h1></div><p class="intro-note">One source, one palette, eleven ways to see it.<br>Change the image. Find the texture that feels right.</p></div>
+    <div class="page-intro algorithm-intro"><h1>Find your algorithm.</h1><p class="intro-note">Compare eleven algorithms with the same image and palette.</p></div>
     <section class="gallery-controls" aria-label="Comparison controls">
       <fieldset><legend>01 / Source & tone</legend>
         <label>Source image<select id="source"></select></label>
@@ -60,7 +59,7 @@
     <div id="gallery" class="gallery"></div>
     <div class="gallery-note"><span class="note-star">✳</span><p>Each card uses the same source, palette, exposure, and contrast. Only the algorithm changes. Adjust a family of algorithms together, inspect a card at 1× or 2×, or take a favorite and its settings into the playground. Resizing rebuilds each texture from its original.</p></div>
     <details open><summary>Make it your own <span>+</span></summary><pre><code id="galleryRecipe"></code></pre><button class="text-button" id="copyGallery" type="button">Copy comparison recipe</button><p class="recipe-help">The recipe keeps the current palette, tone, and algorithm settings, with a different treatment on each image. CSS controls their size.</p><p>This page renders in a shared worker to keep the controls responsive. See <a href="./algorithms.js">the example source</a> or the <a href="https://github.com/jcinis/ditherto/blob/main/ALGORITHMS.md">algorithm reference</a>.</p></details>
-    <footer><span>Tarot studies · rendered live with dither·to.</span><a href="./playground.html">Open the image playground ↗</a></footer>
+    <footer><span>Images rendered live with dither·to.</span><a href="./assets/README.md">Image credits ↗</a><a href="./playground.html">Open the image playground ↗</a></footer>
   </main>
   <dialog id="detail" aria-labelledby="detailTitle">
     <header><h2 id="detailTitle"></h2><button type="button" id="closeDetail" autofocus>Close</button></header>

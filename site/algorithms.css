@@ -1,3 +1,6 @@
+.page-intro.algorithm-intro{padding:28px 0 24px;gap:12px 24px}
+.page-intro.algorithm-intro h1{font-size:clamp(24px,3.4vw,40px);line-height:1.2;letter-spacing:-1.2px;white-space:nowrap}
+.page-intro.algorithm-intro .intro-note{font-size:11px;max-width:400px;flex-shrink:1}
 .gallery-controls{display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:20px;background:none;border:0;padding:0;align-items:stretch}
 .gallery-controls fieldset{display:flex;flex-wrap:wrap;align-content:start;gap:16px;min-width:0;margin:0;padding:20px;border:1px solid var(--line);background:var(--panel)}
 .gallery-controls legend{padding:0 8px;font-size:11px;color:var(--accent)}

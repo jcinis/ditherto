@@ -19,34 +19,34 @@
   <a class="skip" href="#main">Skip to content</a>
   <header class="topbar" data-page="why"></header>
   <main id="main">
-    <div class="why-copy">
-      <div class="edition"><span><i class="live-dot"></i> DITHER·TO / WHY RENDER LIVE?</span><span>THE SCREEN ISN’T A FIXED CANVAS</span></div>
-      <div class="page-intro"><div><p class="eyebrow">THE DETAILS ARE IN THE DOTS.</p><h1>Dither for<br>the size you see.</h1></div><p class="intro-note">A dithered image is a carefully placed pattern.<br>When its size changes, the pattern should change with it.</p></div>
-      <section class="why-controls" aria-label="Resize comparison settings">
-        <label>Image<select id="whySource"><option value="magician">The Magician</option><option value="coffee">Coffee</option><option value="astronaut">NASA portrait</option></select></label>
-        <label class="width-control" for="comparisonWidth">Comparison width <output id="widthValue">100%</output><input type="range" id="comparisonWidth" min="35" max="100" value="100" step="1"></label>
-        <button type="button" id="resetWidth">Reset width</button>
-        <p>Drag the slider or resize your window.<br>Watch the texture, especially in the midtones.</p>
-      </section>
-    </div>
     <section class="comparison-stage" aria-label="Original, live dither and scaled export">
       <div class="why-triptych" id="triptych">
-        <figure><figcaption><span class="panel-number">01 / SOURCE</span><h2>Original</h2><p>Full-color image</p></figcaption><div class="why-image" id="originalWell"><img id="whyOriginal" src="./tarot/01-the-magician.webp" width="768" height="1365" alt="Original Magician tarot artwork"></div><p class="panel-measure" id="originalMeasure">Original source</p></figure>
-        <figure><figcaption><span class="panel-number">02 / DITHER·TO</span><h2>Rendered live</h2><p>Rebuilt for this width</p></figcaption><div class="why-image" id="liveWell"><img id="whyLive" src="./tarot/01-the-magician.webp" width="768" height="1365" alt="Magician artwork dithered at its current display width"></div><p class="panel-measure" id="liveMeasure">Preparing pixels…</p></figure>
-        <figure><figcaption><span class="panel-number">03 / EXPORTED PNG</span><h2>Scaled to fit</h2><p>One fixed dot pattern</p></figcaption><div class="why-image" id="exportWell"><img id="whyExport" src="./assets/why/magician-orchid.png" width="320" height="569" alt="Fixed 320-pixel dithered Magician export, scaled by the browser"></div><p class="panel-measure" id="exportMeasure">320 px export</p></figure>
+        <figure><figcaption><span class="panel-number">01 / SOURCE</span><h2>Original</h2><p>Full-color image</p></figcaption><div class="why-image" id="originalWell"><img id="whyOriginal" src="./tests/fixtures/photos/astronaut.png" width="512" height="512" alt="Original NASA portrait of Eileen Collins"></div><p class="panel-measure" id="originalMeasure">Original source</p></figure>
+        <figure><figcaption><span class="panel-number">02 / DITHER·TO</span><h2>Rendered live</h2><p>Rebuilt for this width</p></figcaption><div class="why-image" id="liveWell"><img id="whyLive" src="./tests/fixtures/photos/astronaut.png" width="512" height="512" alt="NASA portrait dithered at its current display width"></div><p class="panel-measure" id="liveMeasure">Preparing pixels…</p></figure>
+        <figure><figcaption><span class="panel-number">03 / EXPORTED PNG</span><h2>Scaled to fit</h2><p>One fixed dot pattern</p></figcaption><div class="why-image" id="exportWell"><img id="whyExport" src="./assets/why/astronaut-orchid.png" width="320" height="320" alt="Fixed 320-pixel dithered NASA portrait, scaled by the browser"></div><p class="panel-measure" id="exportMeasure">320 px export</p></figure>
       </div>
+      <section class="why-controls" aria-label="Resize comparison settings">
+        <label>Image<select id="whySource"><option value="astronaut" selected>NASA portrait</option><option value="magician">The Magician</option><option value="coffee">Coffee</option></select></label>
+        <label class="width-control" for="comparisonWidth">Comparison width <output id="widthValue">100%</output><input type="range" id="comparisonWidth" min="35" max="100" value="100" step="1"></label>
+        <button type="button" id="resetWidth">Reset width</button>
+        <label class="pixelated-option"><input type="checkbox" id="pixelatedExport">Try pixelated CSS on the export</label>
+      </section>
+      <p class="comparison-status" id="whyStatus" role="status" aria-live="polite">Preparing the comparison…</p>
     </section>
     <div class="why-copy">
-      <div class="comparison-notes"><p id="whyStatus" role="status" aria-live="polite">Preparing the comparison…</p><label class="pixelated-option"><input type="checkbox" id="pixelatedExport">Try pixelated CSS on the export</label></div>
-      <p class="comparison-method">Both dithered views use Atkinson, the selected palette, and the same tone settings. The right-hand image is a real 320-pixel-wide PNG made ahead of time. Only the middle image runs dither·to when you resize.</p>
-      <section class="why-explanation" aria-label="Why size changes the texture">
-        <article><p class="eyebrow">01 / THE PHOTOGRAPH</p><h2>Photos can blend.</h2><p>A photograph contains many shades. The browser can blend neighboring pixels as it scales the image, usually without an obvious change in character.</p></article>
-        <article><p class="eyebrow">02 / THE PATTERN</p><h2>Dots make the tone.</h2><p>Dithering uses the placement of a small set of colors to suggest more shades. dither·to resizes the original first, then builds a new pattern for the displayed width. Crisp pixel rendering keeps those palette colors distinct.</p></article>
-        <article><p class="eyebrow">03 / THE RESIZE</p><h2>Scaling mixes the dots.</h2><p>A fixed export keeps the same dots at every size. At fractional scales, ordinary image smoothing can blend them into intermediate colors, soften the texture, or create uneven patterns. At its intended size, the export can look right too.</p></article>
-      </section>
-      <div class="why-detail"><h2>What about <code>image-rendering: pixelated</code>?</h2><p>Try the checkbox above. It preserves hard color edges, but enlarges or shrinks the existing pattern. Rendering again lets the pattern adapt to the new image size. A fixed export is still useful when you control its final dimensions.</p><p>This demo builds one image pixel per CSS pixel of width. Screen density and browser zoom affect how that grid maps to physical pixels; it does not claim one dot per device pixel.</p></div>
-      <div class="why-next"><div><p class="eyebrow">KEEP THE ORIGINAL. REBUILD THE TEXTURE.</p><h2>Make room for live pixels.</h2></div><div class="actions"><a class="primary" id="whyPlayground" href="./playground.html">Try your own image <span>↗</span></a><a class="secondary" href="./algorithms.html">Compare the algorithms ↗</a></div></div>
-      <footer><a class="wordmark" href="./index.html"><span class="mark" aria-hidden="true"></span>dither·to</a><span id="imageCredit">Tarot artwork from the dither·to collection.</span><a href="./assets/README.md">Image credits ↗</a></footer>
+      <article class="why-article" aria-labelledby="why-title">
+        <h1 id="why-title">Why render live?</h1>
+        <p>Dithering uses a small set of colors to suggest a much wider range of shades. The placement of those colored pixels creates the tones and detail you see. That makes the size of the pattern part of the image.</p>
+        <p>A photograph can usually be resized smoothly by blending neighboring pixels. With a dithered image, that blending can introduce colors outside the palette, soften the dots, or create uneven patterns. You can see this in the comparison above: the exported PNG keeps its original 320-pixel pattern as its display size changes.</p>
+        <h2>Render for the size on screen</h2>
+        <p>dither·to starts with the original image, resizes it to the current display width, and builds a fresh dither pattern. Each time the layout changes, the pattern is recalculated for the space available. Crisp pixel rendering keeps the chosen palette colors distinct.</p>
+        <p>The middle image above does this live. The right-hand image is a fixed export using the same Atkinson algorithm, palette, and tone settings. At its intended size, that export can look right too. Live rendering is useful when an image needs to adapt to different screen sizes and layouts.</p>
+        <h2>What about pixelated CSS?</h2>
+        <p>The <code>image-rendering: pixelated</code> setting preserves hard color edges when an image is scaled. It still enlarges or shrinks the existing pattern. Try the checkbox above to see how that compares with rebuilding the pattern at the new size.</p>
+        <p>This demo renders one image pixel per CSS pixel of width. Screen density and browser zoom affect how that grid maps to physical pixels.</p>
+        <div class="actions"><a class="primary" id="whyPlayground" href="./playground.html">Try your own image <span>↗</span></a><a class="secondary" href="./algorithms.html">Compare the algorithms ↗</a></div>
+      </article>
+      <footer><a class="wordmark" href="./index.html"><span class="mark" aria-hidden="true"></span>dither·to</a><span id="imageCredit">Eileen Collins portrait: NASA / public domain.</span><a href="./assets/README.md">Image credits ↗</a></footer>
     </div>
     <noscript><p class="why-copy">The original and fixed PNG are visible without JavaScript. Enable JavaScript to see the live dither and resize controls.</p></noscript>
   </main>

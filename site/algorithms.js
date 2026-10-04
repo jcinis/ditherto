@@ -1,6 +1,6 @@
 import './site-header.js';
 import { observeDitherDOM, algorithms as registry } from './dist/dom.js';
-import { themes, cards, paletteFor, applyTheme, selectedTheme } from './themes.js';
+import { themes, imageSources, paletteFor, applyTheme, selectedTheme } from './themes.js';
 
 import { registerBlueNoise } from './dist/blue-noise.js';
 registerBlueNoise(registry);
@@ -20,8 +20,8 @@ const algorithms = [
   {id:'nearest', name:'Nearest color', kind:'NO DITHERING', description:'Maps each pixel to its closest palette color. Flat areas and harder transitions: a baseline for the other textures.'},
 ];
 const params = new URLSearchParams(location.search);
-for (const card of cards) $('source').add(new Option(card.name, card.id));
-$('source').value = cards.find(card => card.id === params.get('card'))?.id ?? cards[1].id;
+for (const source of imageSources) $('source').add(new Option(source.name, source.id));
+$('source').value = imageSources.find(source => source.id === params.get('card'))?.id ?? 'astronaut';
 for (const [key, theme] of Object.entries(themes)) $('colors').add(new Option(`${theme.name} / ${theme.colors.length} colors`, key));
 $('colors').value = selectedTheme();
 for (const id of ['bayerSize','candidates','cellSize','history','step']) {
@@ -51,8 +51,8 @@ let uploadName;
 let detailUrl;
 let detailRevision = 0;
 const pending = new Map();
-const sourceCard = () => cards.find(card => card.id === $('source').value);
-const sourceName = () => uploadName ?? sourceCard().name;
+const selectedSource = () => imageSources.find(source => source.id === $('source').value);
+const sourceName = () => uploadName ?? selectedSource().name;
 const familySettings = () => Object.fromEntries(['bayerSize','candidates','cellSize','history','strength','step'].map(id => [id, Number($(id).value)]).concat([['serpentine', $('serpentine').checked]]));
 function algorithmOptions(name) {
   const values = familySettings();
@@ -119,7 +119,7 @@ async function bind() {
 }
 function updateRecipe() {
   const settings = options();
-  const card = sourceCard();
+  const source = selectedSource();
   $('strengthValue').textContent = `${$('strength').value}%`;
   $('halftoneNote').textContent = settings.palette.length > 2 ? 'Halftone uses the darkest and lightest colors; the other palette colors are ignored.' : 'Halftone uses both palette colors.';
   $('swatches').replaceChildren(...settings.palette.map(color => { const chip = document.createElement('span'); chip.style.background = `rgb(${color.join(',')})`; chip.title = `RGB ${color.join(', ')}`; return chip; }));
@@ -127,13 +127,13 @@ function updateRecipe() {
   $('contrastValue').textContent = `${Number($('contrast').value) > 0 ? '+' : ''}${$('contrast').value}%`;
   const url = new URL(location.href);
   url.searchParams.delete('algorithm');
-  for (const [key, value] of Object.entries({card:card.id, exposure:settings.exposure, contrast:settings.contrast, ...familySettings()})) url.searchParams.set(key,value);
+  for (const [key, value] of Object.entries({card:source.id, exposure:settings.exposure, contrast:settings.contrast, ...familySettings()})) url.searchParams.set(key,value);
   history.replaceState(history.state,'',url);
   articles.forEach((article,index) => {
-    article.querySelector('a').href = `./playground.html?${new URLSearchParams({card:card.id, theme:$('colors').value, algorithm:algorithms[index].id, exposure:settings.exposure, contrast:settings.contrast, ...familySettings()})}`;
+    article.querySelector('a').href = `./playground.html?${new URLSearchParams({card:source.id, theme:$('colors').value, algorithm:algorithms[index].id, exposure:settings.exposure, contrast:settings.contrast, ...familySettings()})}`;
     article.querySelector('a').hidden = Boolean(uploadUrl);
   });
-  const examples = algorithms.map(algorithm => `// <img class="compare" src="${uploadUrl ? 'your-image.png' : card.file}" data-algorithm="${algorithm.id}" data-algorithm-options='${JSON.stringify(algorithmOptions(algorithm.id))}'>`).join('\n');
+  const examples = algorithms.map(algorithm => `// <img class="compare" src="${uploadUrl ? 'your-image.png' : source.src}" data-algorithm="${algorithm.id}" data-algorithm-options='${JSON.stringify(algorithmOptions(algorithm.id))}'>`).join('\n');
   $('galleryRecipe').textContent = `import { observeDitherDOM, algorithms } from 'ditherto/dom';\nimport { registerBlueNoise } from 'ditherto/blue-noise';\nregisterBlueNoise(algorithms);\n\n// Give the images a shared source. CSS controls their display size.\n${examples}\nconst comparison = observeDitherDOM('img.compare', {\n  palette: ${JSON.stringify(settings.palette)},\n  exposure: ${settings.exposure},\n  contrast: ${settings.contrast},\n  step: ${settings.step},\n  resample: 'area'\n});\n\nawait comparison.ready;\n// On unmount: comparison.destroy();`;
   $('copyGallery').textContent = 'Copy comparison recipe';
 }
@@ -144,10 +144,12 @@ function updateSettings() {
 }
 function changeSource() {
   dispose();
-  const card = sourceCard();
+  const source = selectedSource();
   for (const article of articles) {
     const image = article.querySelector('img');
-    image.src = uploadUrl ?? `./tarot/${card.file}`;
+    image.src = uploadUrl ?? source.src;
+    image.width = source.width;
+    image.height = source.height;
     image.alt = `${sourceName()} — ${algorithms[articles.indexOf(article)].name}`;
     article.querySelector('.dimensions').textContent = showingOriginals ? 'Original' : 'Rendering…';
   }

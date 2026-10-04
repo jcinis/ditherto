@@ -6,3 +6,4 @@
 details[open]>summary>span{font-size:0}details[open]>summary>span::after{content:'−';font-size:12px}
 /* Expanded recipes must scroll within the panel, not widen the mobile flex layout. */
 .preview-area{width:100%}
+.workspace{margin-top:24px}

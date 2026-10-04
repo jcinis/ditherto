@@ -11,7 +11,7 @@ const hash = canvas => canvas.evaluate(async c => {
 });
 async function matchesOriginal(canvas, file, options) {
   const width = await canvas.evaluate(c=>c.parentElement.clientWidth);
-  const pixels = await ditherToImageData(`site/tarot/${file}`,{width,resample:'area',...options});
+  const pixels = await ditherToImageData(file.includes('/') ? file : `site/tarot/${file}`,{width,resample:'area',...options});
   await expect.poll(()=>hash(canvas)).toBe(createHash('sha256').update(pixels.data).digest('hex'));
 }
 
@@ -29,15 +29,18 @@ test('Arcana rerenders original cards and preserves composited palette colors at
     try {
       await page.goto(`${baseURL}/`);
       await expect(page.locator('h1')).toHaveText('dither·to');
+      await expect(page.locator('.theme-picker button').last()).toHaveText('Blue Mono');
+      await expect(page.getByRole('button',{name:'Blue Mono',exact:true})).toHaveAttribute('aria-pressed','true');
+      await expect(page.getByRole('button',{name:'Preview The High Priestess',exact:true})).toHaveAttribute('aria-pressed','true');
       await expect(page.locator('canvas.arcana-image')).toHaveCount(6);
       for(const width of [1280,393,850,1280]) {
         await page.setViewportSize({width,height:1000});
         const canvas=page.locator('.hero-card canvas');
-        await matchesOriginal(canvas,'01-the-magician.webp',{palette:paletteFor('orchid'),exposure:0.3});
+        await matchesOriginal(canvas,'02-the-high-pristess.webp',{palette:paletteFor('blue'),exposure:0.3});
         await canvas.scrollIntoViewIfNeeded();
         const box=(await canvas.boundingBox())!;
         const displayed=await loadImageData(await page.screenshot({clip:{x:Math.ceil(box.x)+2,y:Math.ceil(box.y)+2,width:Math.floor(box.width)-4,height:Math.floor(box.height)-4}}));
-        const allowed=new Set(paletteFor('orchid').map(rgb=>rgb.join(',')));
+        const allowed=new Set(paletteFor('blue').map(rgb=>rgb.join(',')));
         let outside=0;
         for(let i=0;i<displayed.data.length;i+=4)if(!allowed.has(Array.from(displayed.data.subarray(i,i+3)).join(',')))outside++;
         expect(outside,`viewport ${width}, density ${deviceScaleFactor}`).toBe(0);
@@ -45,8 +48,9 @@ test('Arcana rerenders original cards and preserves composited palette colors at
       }
       if(deviceScaleFactor===1) {
         for(const card of cards) {
-          await page.locator('#card-select').selectOption(card.id);
-          await matchesOriginal(page.locator('.hero-card canvas'),card.file,{palette:paletteFor('orchid'),exposure:0.3});
+          await page.getByRole('button',{name:`Preview ${card.name}`,exact:true}).click();
+          await expect(page.getByRole('button',{name:`Preview ${card.name}`,exact:true})).toHaveAttribute('aria-pressed','true');
+          await matchesOriginal(page.locator('.hero-card canvas'),card.file,{palette:paletteFor('blue'),exposure:0.3});
         }
         await page.screenshot({path:testInfo.outputPath('arcana-home.png'),fullPage:true});
       }
@@ -59,12 +63,12 @@ test('Arcana themes and settings carry to both playgrounds; recipes start expand
   await expect(page.locator('canvas.arcana-image')).toHaveCount(6);
   for(const theme of Object.keys(themes)) {
     await page.getByRole('button',{name:themes[theme].name,exact:true}).click();
-    await matchesOriginal(page.locator('.hero-card canvas'),'01-the-magician.webp',{palette:paletteFor(theme),exposure:0.3});
+    await matchesOriginal(page.locator('.hero-card canvas'),'02-the-high-pristess.webp',{palette:paletteFor(theme),exposure:0.3});
   }
   await page.getByRole('button',{name:'Moss',exact:true}).click();
-  await page.locator('#texture').selectOption('ordered');
+  await page.locator('#algorithm').selectOption('ordered');
   await page.locator('#tone').fill('0.8');
-  await page.locator('#card-select').selectOption('00-the-fool');
+  await page.getByRole('button',{name:'Preview The Fool',exact:true}).click();
   await matchesOriginal(page.locator('.hero-card canvas'),'00-the-fool.webp',{palette:paletteFor('moss'),algorithm:'ordered',exposure:0.8});
   await page.locator('#open-playground').click();
   await expect(page.locator('#download')).toBeEnabled();
@@ -84,6 +88,35 @@ test('Arcana themes and settings carry to both playgrounds; recipes start expand
   await expectGalleryRendered(page);
 });
 
+test('Homepage pixel size updates previews, copied examples, and playground settings', async ({page}) => {
+  await page.goto('/index.html?theme=orchid');
+  await expect(page.locator('canvas.arcana-image')).toHaveCount(6);
+  await expect(page.getByLabel('PIXEL SIZE')).toHaveValue('1');
+  const canvas=page.locator('.hero-card canvas');
+  await matchesOriginal(canvas,'02-the-high-pristess.webp',{palette:paletteFor('orchid'),exposure:0.3,step:1});
+  await page.getByLabel('PIXEL SIZE').fill('4');
+  await expect(page.locator('#step-value')).toHaveText('4 × 4');
+  await matchesOriginal(canvas,'02-the-high-pristess.webp',{palette:paletteFor('orchid'),exposure:0.3,step:4});
+  await matchesOriginal(page.locator('[data-card="00-the-fool"] canvas'),'00-the-fool.webp',{palette:paletteFor('orchid'),exposure:0.3,step:4});
+  await expect(page.locator('#live-code')).toContainText('step: 4');
+  await expect(page.locator('#cli-demo')).toContainText('--step 4');
+  await page.getByRole('button',{name:'Show original',exact:true}).click();
+  const empress=page.getByRole('button',{name:'Preview The Empress',exact:true});
+  await empress.focus();
+  await page.keyboard.press('Enter');
+  await expect(empress).toHaveAttribute('aria-pressed','true');
+  await expect(page.locator('#original-overlay')).toBeVisible();
+  await expect(page.locator('#original-overlay')).toHaveAttribute('src',/03-the-empress.webp$/);
+  await page.getByRole('button',{name:'Show dithered',exact:true}).click();
+  await matchesOriginal(canvas,'03-the-empress.webp',{palette:paletteFor('orchid'),exposure:0.3,step:4});
+  await page.setViewportSize({width:390,height:844});
+  await matchesOriginal(canvas,'03-the-empress.webp',{palette:paletteFor('orchid'),exposure:0.3,step:4});
+  await page.locator('#open-playground').click();
+  await expect(page.locator('#download')).toBeEnabled();
+  await expect(page.locator('#step')).toHaveValue('4');
+  await matchesOriginal(page.locator('#resultCanvas'),'03-the-empress.webp',{palette:paletteFor('orchid'),exposure:0.3,step:4});
+});
+
 test('Algorithm gallery compares each renderer and keeps settings through resize, source changes and restore', async ({page}, testInfo) => {
   test.setTimeout(90_000);
   await page.goto('/responsive.html?theme=orchid');
@@ -92,7 +125,7 @@ test('Algorithm gallery compares each renderer and keeps settings through resize
   await expect(page.locator('#galleryRecipe')).toBeVisible();
   await expect(page.locator('#galleryRecipe')).toContainText('registerBlueNoise(algorithms)');
   const algorithms=['atkinson','floyd-steinberg','ordered','knoll','sierra-lite','stucki','halftone','riemersma','ordered-blue-noise','knoll-blue-noise','nearest'];
-  const check = async (file='01-the-magician.webp', exposure=0.3, contrast=1, theme='orchid') => {
+  const check = async (file='tests/fixtures/photos/astronaut.png', exposure=0.3, contrast=1, theme='orchid') => {
     for (const [index,algorithm] of algorithms.entries()) {
       await matchesOriginal(page.locator('.gallery canvas').nth(index),file,{palette:paletteFor(theme),algorithm,exposure,contrast});
     }
@@ -100,9 +133,9 @@ test('Algorithm gallery compares each renderer and keeps settings through resize
   await check();
   await page.locator('#exposure').fill('0.8');
   await page.locator('#contrast').fill('20');
-  await check('01-the-magician.webp',0.8,1.2);
+  await check('tests/fixtures/photos/astronaut.png',0.8,1.2);
   await expect(page.locator('#galleryRecipe')).toContainText('contrast: 1.2');
-  for (const width of ['55','100']) { await page.locator('#galleryWidth').fill(width); await check('01-the-magician.webp',0.8,1.2); }
+  for (const width of ['55','100']) { await page.locator('#galleryWidth').fill(width); await check('tests/fixtures/photos/astronaut.png',0.8,1.2); }
   await page.locator('#source').selectOption('00-the-fool');
   await check('00-the-fool.webp',0.8,1.2);
   await page.locator('#toggle').click();
@@ -142,7 +175,7 @@ test('Algorithm comparison shares family controls, inspects pixels and preserves
     ['ordered-blue-noise', {}], ['knoll-blue-noise', {candidates:64,strength:0.35}], ['nearest', {}],
   ] as const;
   for (const [index,[algorithm,algorithmOptions]] of settings.entries()) {
-    await matchesOriginal(page.locator('.gallery canvas').nth(index),'01-the-magician.webp',{palette:paletteFor('blue'),algorithm,algorithmOptions,step:2,exposure:0.3});
+    await matchesOriginal(page.locator('.gallery canvas').nth(index),'tests/fixtures/photos/astronaut.png',{palette:paletteFor('blue'),algorithm,algorithmOptions,step:2,exposure:0.3});
   }
   await page.locator('#strength').fill('0');
   const nearest = await hash(page.locator('.gallery canvas').nth(10));
@@ -166,7 +199,7 @@ test('Algorithm comparison shares family controls, inspects pixels and preserves
   await expect(page.locator('#knollCandidates')).toHaveValue('64');
   await expect(page.locator('#knollStrength')).toHaveValue('0');
   await expect(page.locator('#step')).toHaveValue('2');
-  await matchesOriginal(page.locator('#resultCanvas'),'01-the-magician.webp',{palette:paletteFor('blue'),algorithm:'knoll',algorithmOptions:{bayerSize:8,candidates:64,strength:0},step:2,exposure:0.3});
+  await matchesOriginal(page.locator('#resultCanvas'),'tests/fixtures/photos/astronaut.png',{palette:paletteFor('blue'),algorithm:'knoll',algorithmOptions:{bayerSize:8,candidates:64,strength:0},step:2,exposure:0.3});
 });
 
 test('Algorithm comparison handles local uploads and the homepage exposes optional algorithms', async ({page}) => {
@@ -186,12 +219,12 @@ test('Algorithm comparison handles local uploads and the homepage exposes option
   await expect(page.getByRole('link',{name:'Tune Knoll ↗',exact:true})).toBeVisible();
   await matchesOriginal(page.locator('.gallery canvas').first(),'00-the-fool.webp',{palette:paletteFor('orchid'),exposure:0.3,algorithm:'atkinson'});
   await page.goto('/index.html?theme=mono');
-  await expect(page.locator('#texture option')).toHaveCount(11);
-  await page.locator('#texture').selectOption('knoll-blue-noise');
-  await matchesOriginal(page.locator('.hero-card canvas'),'01-the-magician.webp',{palette:paletteFor('mono'),exposure:0.3,algorithm:'knoll-blue-noise'});
+  await expect(page.locator('#algorithm option')).toHaveCount(11);
+  await page.locator('#algorithm').selectOption('knoll-blue-noise');
+  await matchesOriginal(page.locator('.hero-card canvas'),'02-the-high-pristess.webp',{palette:paletteFor('mono'),exposure:0.3,algorithm:'knoll-blue-noise'});
   await expect(page.locator('#live-code')).toContainText('registerBlueNoise(algorithms)');
-  await page.locator('#texture').selectOption('stucki');
-  await matchesOriginal(page.locator('.hero-card canvas'),'01-the-magician.webp',{palette:paletteFor('mono'),exposure:0.3,algorithm:'stucki'});
+  await page.locator('#algorithm').selectOption('stucki');
+  await matchesOriginal(page.locator('.hero-card canvas'),'02-the-high-pristess.webp',{palette:paletteFor('mono'),exposure:0.3,algorithm:'stucki'});
   await expect(page.locator('#live-code')).not.toContainText('registerBlueNoise');
 });
 
@@ -206,7 +239,42 @@ test('Algorithm gallery waits for a delayed worker before checking rendered pixe
   await page.goto('/algorithms.html?theme=orchid');
   await expectGalleryRendered(page);
   await expect(page.locator('#status')).toContainText('11 renders');
-  await matchesOriginal(page.locator('.gallery canvas').first(), '01-the-magician.webp', {
+  await matchesOriginal(page.locator('.gallery canvas').first(), 'tests/fixtures/photos/astronaut.png', {
     palette: paletteFor('orchid'), algorithm: 'atkinson', exposure: 0.3,
   });
+});
+
+
+test('Algorithm gallery offers photo samples, defaults to NASA, and preserves the selected source', async ({page}) => {
+  test.setTimeout(60_000);
+  await page.goto('/algorithms.html?theme=orchid');
+  await expect(page.locator('#source')).toHaveValue('astronaut');
+  await expectGalleryRendered(page);
+  const samples = [
+    {id:'astronaut', name:'NASA portrait'},
+    {id:'chelsea', name:'Cat / Chelsea'},
+    {id:'coffee', name:'Coffee cup'},
+  ];
+  for (const {id,name} of samples) {
+    await page.locator('#source').selectOption({label:name});
+    await expectGalleryRendered(page);
+    await matchesOriginal(page.locator('.gallery canvas').first(),`tests/fixtures/photos/${id}.png`,{palette:paletteFor('orchid'),exposure:0.3});
+    await expect(page.locator('#galleryRecipe')).toContainText(`src="./tests/fixtures/photos/${id}.png"`);
+    await page.reload();
+    await expect(page.locator('#source')).toHaveValue(id);
+    await expectGalleryRendered(page);
+    await page.getByRole('link',{name:'Tune Atkinson ↗',exact:true}).click();
+    await expect(page.locator('#download')).toBeEnabled();
+    await expect(page.locator('#photoSample')).toHaveValue(id);
+    await matchesOriginal(page.locator('#resultCanvas'),`tests/fixtures/photos/${id}.png`,{palette:paletteFor('orchid'),exposure:0.3});
+    await page.goBack();
+    await expect(page.locator('#source')).toHaveValue(id);
+    await expectGalleryRendered(page);
+  }
+  await page.goto('/algorithms.html?card=01-the-magician&theme=orchid');
+  await expect(page.locator('#source')).toHaveValue('01-the-magician');
+  await expectGalleryRendered(page);
+  await matchesOriginal(page.locator('.gallery canvas').first(),'01-the-magician.webp',{palette:paletteFor('orchid'),exposure:0.3});
+  await page.goto('/algorithms.html?card=unknown');
+  await expect(page.locator('#source')).toHaveValue('astronaut');
 });
