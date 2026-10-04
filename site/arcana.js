@@ -60,7 +60,7 @@ function refreshRecipe(){
     link.href = `./algorithms.html?${new URLSearchParams({theme, card:selectedCard().id, exposure, step})}`;
   }
 }
-function report(error){if(error.name!=='AbortError'){$('render-state').textContent='RENDER ERROR';$('hero-dimensions').textContent=error.message;}}
+function report(error){if(error.name!=='AbortError'){document.documentElement.classList.remove('reveal-images');$('render-state').textContent='RENDER ERROR';$('hero-dimensions').textContent=error.message;}}
 function render(source,options){return new Promise((resolve,reject)=>{
   if(!worker){reject(new Error('Worker unavailable'));return;}
   const id=++serial;pending.set(id,{resolve,reject});
@@ -74,6 +74,7 @@ function bind(){
   controller=observeDitherDOM('img.arcana-image',{palette:paletteFor(theme),algorithm:$('algorithm').value,step:Number($('step').value),resample:'area'}, {
     render,onError:report,onRender(canvas,image){
       canvas.setAttribute('aria-label',image.alt);
+      canvas.classList.add('is-rendered');
       if(image.id==='featured-card'){$('hero-dimensions').textContent=`${canvas.width} × ${canvas.height} / ${themes[theme].colors.length} COLORS`;$('render-state').textContent='LIVE / RESIZE TO RENDER';}
     },
   });
@@ -105,6 +106,7 @@ async function selectCard(id){
   for(const button of document.querySelectorAll('.tarot-thumbnail'))button.setAttribute('aria-pressed',String(button.dataset.card===id));
   const revision=++selection;
   const card=selectedCard();const handle=controller?.images.find(handle=>handle.image.id==='featured-card');if(!handle)return;
+  handle.canvas?.classList.remove('is-rendered');
   handle.image.src=`./tarot/${card.file}`;handle.image.alt=`${card.name} tarot card`;
   $('original-overlay').src=handle.image.src;$('original-overlay').alt=`Original ${card.name} artwork`;
   $('card-name').textContent=card.name.toUpperCase();$('render-state').textContent='OPENING ORIGINAL';
