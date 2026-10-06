@@ -1,6 +1,6 @@
 {
   "name": "ditherto",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Dither images into fixed palettes in browsers, Node, and the CLI. Optional resizing, photo palettes, and responsive rendering.",
   "keywords": [
     "dithering",
@@ -14,11 +14,11 @@
     "cli",
     "image-processing"
   ],
-  "homepage": "https://jcinis.github.io/ditherto/",
-  "bugs": "https://github.com/jcinis/ditherto/issues",
+  "homepage": "https://vexlin.github.io/ditherto/",
+  "bugs": "https://github.com/vexlin/ditherto/issues",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/jcinis/ditherto.git"
+    "url": "git+https://github.com/vexlin/ditherto.git"
   },
   "license": "MIT",
   "author": "Jessey White-Cinis <j@cin.is>",

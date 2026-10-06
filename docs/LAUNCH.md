@@ -22,7 +22,7 @@ Start with a few personal contacts or existing followers who actually make websi
 
 Title: **Show HN: Ditherto – fixed-palette dithering for websites and the CLI**
 
-URL: `https://jcinis.github.io/ditherto/examples/browser-demo.html`
+URL: `https://vexlin.github.io/ditherto/examples/browser-demo.html`
 
 Draft first comment:
 

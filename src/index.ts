@@ -45,4 +45,4 @@ import './algorithms/floydSteinberg.js';
 import './algorithms/ordered.js';
 
 // Version info
-export const version = '0.1.0';
+export const version = '0.2.0';

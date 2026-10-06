@@ -1,14 +1,14 @@
 # Packaging and publication
 
-Published September 25, 2026: [`ditherto@0.1.0`](https://www.npmjs.com/package/ditherto) is available on npm. The first release was published through an authenticated local session. npm trusted publishing is configured for `jcinis/ditherto` and `release.yml`; future stable GitHub releases trigger the automated workflow described below.
+Published September 25, 2026: [`ditherto@0.1.0`](https://www.npmjs.com/package/ditherto) is available on npm. The first release was published through an authenticated local session. The release workflow now targets `vexlin/ditherto` and `release.yml` through npm trusted publishing.
 
-The new algorithm collection is included in the repository and website build. It requires a subsequent npm release; publishing the website alone does not update `ditherto@0.1.0`.
+Version `0.2.0` packages the new algorithm collection, optional blue-noise entry point, and updated `vexlin` repository metadata. A successful release workflow and registry verification confirm publication; publishing the website alone does not update npm.
 
 ## What is ready
 
 - ESM and CommonJS entries with matching TypeScript declarations: `ditherto`, `ditherto/browser`, `ditherto/dom`, `ditherto/node`, and optional `ditherto/blue-noise`.
 - The `ditherto` CLI, MIT license, visual README and a restricted package file list.
-- `prepack` rebuilds the distribution before packing. `npm pack` produces `ditherto-0.1.0.tgz`.
+- `prepack` rebuilds the distribution before packing. `npm pack` produces `ditherto-0.2.0.tgz`.
 - Package verification covers exports, declarations, CLI behavior, browser dependency isolation and gzip budgets.
 - Browser entries contain no native imports. Node decoding/PNG encoding uses the existing `@napi-rs/canvas` dependency and its platform binaries; tarball size does not include installed dependency size.
 - The `Release package` workflow tests, builds and publishes when a stable GitHub release is published. Manual runs build an archive by default; publishing from a manual run requires selecting the matching version tag. Tagging alone does not publish.
@@ -23,7 +23,7 @@ npm run test:ci
 npm run test:package
 npm pack
 # In a separate project:
-npm install /absolute/path/to/ditherto-0.1.0.tgz
+npm install /absolute/path/to/ditherto-0.2.0.tgz
 npx ditherto input.jpg -o output.png --palette MONO_BLUE --json
 ```
 
@@ -36,12 +36,12 @@ The account owner needs an npm account with the package name available and an au
 1. Review the package and choose the release version. Update both package files with `npm version <version> --no-git-tag-version` if changing it, then commit the release changes.
 2. Authenticate interactively with `npm login`; keep credentials and one-time codes out of chat and repository files.
 3. Run the checks above and publish deliberately with `npm publish --access public`. This is the actual public-release step. Each version can only be published once.
-4. Verify `npm view ditherto version` and try `npx --yes ditherto@0.1.0 --help` from a separate directory (use the version actually released).
+4. Verify `npm view ditherto version` and try `npx --yes ditherto@0.2.0 --help` from a separate directory (use the version actually released).
 5. Update the publication status and release notes, then attach the published tarball to the matching GitHub release.
 
 ## Subsequent releases via GitHub
 
-Configured September 25, 2026 for GitHub user `jcinis`, repository `ditherto`, workflow `release.yml`, with no environment restriction. Direct `npm publish` is enabled. The workflow uses Node 24, npm 11.19.1 and `id-token: write`; no persistent npm token is required. [npm trusted publishing documentation](https://docs.npmjs.com/trusted-publishers/).
+The trusted publisher must authorize GitHub user `vexlin`, repository `ditherto`, workflow `release.yml`, with no environment restriction. Direct `npm publish` is enabled. The workflow uses Node 24, npm 11.19.1 and `id-token: write`; no persistent npm token is required. [npm trusted publishing documentation](https://docs.npmjs.com/trusted-publishers/).
 
 For each subsequent release:
 
@@ -53,7 +53,7 @@ For each subsequent release:
 
 For a package-only rehearsal, run **Actions → Release package → Run workflow**, leaving `publish` unchecked. This does not exercise npm's OIDC authentication or publish anything. To retry a failed publication manually, select the matching version tag and enable `publish` only if that version has not reached npm. A failed test stops publication; investigate failures before retrying.
 
-The existing `v0.1.0` release predates this trigger and is already on npm. It will not be republished by adding the workflow. Trusted publishing will first be exercised on a future version; do not bump the library solely to test authentication.
+The existing `v0.1.0` release predates this trigger and is already on npm. It will not be republished by adding the workflow. The `0.2.0` release exercises the new trusted publisher and ships the algorithm additions since `0.1.0`.
 
 ## Other distribution options
 

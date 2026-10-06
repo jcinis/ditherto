@@ -18,6 +18,9 @@ for (const name of ['rollup', 'esbuild']) {
   }
 }
 const cjs = require('../dist/index.cjs');
+const packageVersion = JSON.parse(await readFile('package.json', 'utf8')).version;
+assert.equal(cjs.version, packageVersion);
+assert.equal((await import('../dist/index.js')).version, packageVersion);
 const blue = await import('../dist/blue-noise.js');
 const blueCjs = require('../dist/blue-noise.cjs');
 assert.equal(algorithms.get('ordered-blue-noise'), undefined, 'Optional import must not mutate the main registry');
@@ -93,7 +96,7 @@ const temp = await mkdtemp(join(tmpdir(), 'ditherto-package-'));
 try {
   const cli = resolve('dist/cli.js');
   assert.match(execFileSync(process.execPath, [cli, '--help'], { encoding: 'utf8' }), /Usage:/);
-  assert.equal(execFileSync(process.execPath, [cli, '--version'], { encoding: 'utf8' }).trim(), '0.1.0');
+  assert.equal(execFileSync(process.execPath, [cli, '--version'], { encoding: 'utf8' }).trim(), packageVersion);
   const link = join(temp, 'ditherto');
   await symlink(cli, link);
   assert.match(execFileSync(process.execPath, [link, '--help'], { encoding: 'utf8' }), /Usage:/);

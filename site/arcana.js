@@ -19,7 +19,15 @@ function selectPackageManager(tab){
   }
   $('install-command').setAttribute('aria-labelledby',tab.id);
   $('install-command').querySelector('code').textContent=tab.dataset.command;
+  $('copy-install').textContent='Copy';
 }
+$('copy-install').addEventListener('click',async()=>{
+  const command=$('install-command').querySelector('code').textContent;
+  let message;
+  try{await navigator.clipboard.writeText(command);message='Copied!';}
+  catch{message='Copy failed';}
+  if($('install-command').querySelector('code').textContent===command)$('copy-install').textContent=message;
+});
 for(const [index,tab] of installTabs.entries()){
   tab.addEventListener('click',()=>selectPackageManager(tab));
   tab.addEventListener('keydown',event=>{

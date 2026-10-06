@@ -5,16 +5,16 @@
   <script>document.documentElement.classList.add('reveal-images');</script>
   <title>dither·to — Image processing for fixed color palettes</title>
   <meta name="description" content="ditherto is an image processing library for the browser, Node.js, and CLI. Render images to a fixed color palette with a choice of dithering algorithms.">
-  <link rel="canonical" href="https://jcinis.github.io/ditherto/">
+  <link rel="canonical" href="https://vexlin.github.io/ditherto/">
   <meta property="og:type" content="website">
   <meta property="og:title" content="dither·to — Image processing for fixed color palettes">
   <meta property="og:description" content="Render images to a fixed color palette with a choice of dithering algorithms. Use ditherto in the browser, Node.js, or CLI.">
-  <meta property="og:image" content="https://jcinis.github.io/ditherto/assets/arcana-share.png">
+  <meta property="og:image" content="https://vexlin.github.io/ditherto/assets/arcana-share.png">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
   <meta property="og:image:alt" content="dither·to with The Magician and The Empress tarot studies dithered in blue ink and white.">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:image" content="https://jcinis.github.io/ditherto/assets/arcana-share.png">
+  <meta name="twitter:image" content="https://vexlin.github.io/ditherto/assets/arcana-share.png">
   <link rel="stylesheet" href="./arcana.css">
   <link rel="stylesheet" href="./site-shell.css">
   <link rel="stylesheet" href="./theme-controls.css">
@@ -27,7 +27,7 @@
       <div class="manifesto">
         <p class="eyebrow">AN IMAGE PROCESSING LIBRARY</p>
         <h1 id="hero-title">dither·to</h1>
-        <p class="hero-line">Any image.<br>A fixed color palette.</p>
+        <p class="hero-line">Any image.<br>Fixed palette.<br>Perfect pixels.</p>
         <p class="lede">ditherto renders images to a fixed color palette using a choice of dithering algorithms. Use it in the browser, in Node.js, or from the command line.</p>
         <div class="actions"><a class="primary" id="open-playground" href="./playground.html">Try your own image <span>↗</span></a></div>
         <div class="developer-links">
@@ -38,9 +38,9 @@
               <button type="button" role="tab" id="install-yarn" aria-controls="install-command" aria-selected="false" tabindex="-1" data-command="yarn add ditherto">Yarn</button>
               <button type="button" role="tab" id="install-bun" aria-controls="install-command" aria-selected="false" tabindex="-1" data-command="bun add ditherto">Bun</button>
             </div>
-            <div id="install-command" role="tabpanel" aria-labelledby="install-npm" tabindex="0"><code>npm install ditherto</code></div>
+            <div id="install-command" role="tabpanel" aria-labelledby="install-npm" tabindex="0"><code>npm install ditherto</code><button type="button" id="copy-install" aria-live="polite">Copy</button></div>
           </div>
-          <div class="package-links"><a href="https://github.com/jcinis/ditherto">GitHub ↗</a><a href="https://www.npmjs.com/package/ditherto">npm ↗</a></div>
+          <div class="package-links"><a href="https://github.com/vexlin/ditherto">GitHub ↗</a><a href="https://www.npmjs.com/package/ditherto">npm ↗</a></div>
         </div>
         <section id="collection" class="collection" aria-labelledby="collection-title">
           <div class="section-top"><h2 id="collection-title">Try it here</h2><p>Select a card to preview.</p></div>
@@ -60,10 +60,10 @@
       </div>
     </section>
     <section id="use" class="use-section" aria-labelledby="use-title">
-      <div><p class="eyebrow">GET STARTED</p><h2 id="use-title">Use it in your project.</h2><p>Install <code>ditherto</code> from npm for your JavaScript or TypeScript project, or process a local image directly with the CLI.</p><div class="terminal"><div class="terminal-head"><span>COMMAND LINE</span><span>PNG OUTPUT</span></div><code id="cli-demo"></code><p>Replace <code>photo.jpg</code> with your image path.</p></div><div class="usage-links"><a class="secondary" href="https://github.com/jcinis/ditherto#readme">Read the documentation ↗</a><a class="secondary" href="./algorithms.html">Compare the algorithms ↗</a></div></div>
+      <div><p class="eyebrow">GET STARTED</p><h2 id="use-title">Use it in your project.</h2><p>Install <code>ditherto</code> from npm for your JavaScript or TypeScript project, or process a local image directly with the CLI.</p><div class="terminal"><div class="terminal-head"><span>COMMAND LINE</span><span>PNG OUTPUT</span></div><code id="cli-demo"></code><p>Replace <code>photo.jpg</code> with your image path.</p></div><div class="usage-links"><a class="secondary" href="https://github.com/vexlin/ditherto#readme">Read the documentation ↗</a><a class="secondary" href="./algorithms.html">Compare the algorithms ↗</a></div></div>
       <div class="browser-example"><h3>In the browser</h3><p>With a browser bundler, add <code>&lt;img class="dither" src="photo.jpg"&gt;</code> to your page, then bind it below. Images rerender automatically when their layout size changes.</p><div class="code-window"><div class="window-title"><span>images.js / CURRENT SETTINGS</span><button id="copy-code">Copy code</button></div><pre><code id="live-code"></code></pre><div class="window-status"><span>RESPONSIVE RENDERING</span><span>ORIGINALS PRESERVED</span></div></div></div>
     </section>
-    <footer><a class="wordmark" href="./index.html"><span class="mark" aria-hidden="true"></span>dither·to</a><span>Image processing / MIT licensed</span><a href="https://github.com/jcinis/ditherto">GitHub ↗</a><a href="https://www.npmjs.com/package/ditherto">npm ↗</a></footer>
+    <footer><a class="wordmark" href="./index.html"><span class="mark" aria-hidden="true"></span>dither·to</a><span>Image processing / MIT licensed</span><a href="https://github.com/vexlin/ditherto">GitHub ↗</a><a href="https://www.npmjs.com/package/ditherto">npm ↗</a></footer>
   </main>
   <script type="module" src="./arcana.js"></script>
 </body>

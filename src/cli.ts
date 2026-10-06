@@ -179,7 +179,7 @@ Options:
 }
 
 export function showVersion(): void {
-  console.log('0.1.0');
+  console.log('0.2.0');
 }
 
 /**
