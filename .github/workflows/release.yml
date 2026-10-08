@@ -18,6 +18,8 @@ jobs:
   package:
     if: github.event_name != 'release' || !github.event.release.prerelease
     runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
     env:
       PUBLISH_PACKAGE: ${{ github.event_name == 'release' || inputs.publish }}
     steps:
@@ -53,3 +55,10 @@ jobs:
         env:
           PACKAGE_ARCHIVE: ditherto-${{ steps.version.outputs.version }}.tgz
         run: npm publish "./$PACKAGE_ARCHIVE" --access public
+  homebrew:
+    needs: package
+    if: github.event_name == 'release' || inputs.publish
+    uses: ./.github/workflows/homebrew.yml
+    with:
+      version: ${{ needs.package.outputs.version }}
+    secrets: inherit

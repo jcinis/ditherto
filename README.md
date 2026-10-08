@@ -28,6 +28,15 @@ Or run the CLI directly:
 npx ditherto photo.jpg -o photo.png --palette MONO_BLUE
 ```
 
+Install the CLI with Homebrew on macOS or Linux:
+
+```sh
+brew install vexlin/tap/ditherto
+ditherto photo.jpg -o photo.png --palette MONO_BLUE
+```
+
+Homebrew installs Node and the CLI together. Run `brew update && brew upgrade ditherto` to get new releases. The [tap](https://github.com/vexlin/homebrew-tap) follows stable npm releases after its installation and image-conversion checks pass.
+
 Node 20 or newer is required for the CLI and build tools. To develop locally or run the playgrounds from source:
 
 ```sh

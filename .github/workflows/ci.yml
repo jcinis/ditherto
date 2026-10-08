@@ -19,6 +19,7 @@ jobs:
       - run: npm ci
       - run: npm run typecheck
       - run: npm run lint
+      - run: node --test scripts/update-homebrew.test.mjs
       - run: npm run test:ci
       - run: npm run test:package
   browser:

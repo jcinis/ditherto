@@ -1,0 +1,36 @@
+class Ditherto < Formula
+  desc "Dither images into fixed color palettes"
+  homepage "https://vexlin.github.io/ditherto/"
+  url "https://registry.npmjs.org/ditherto/-/ditherto-@VERSION@.tgz"
+  sha256 "@SHA256@"
+  license "MIT"
+
+  depends_on "node"
+
+  def install
+    # Match the project's tested canvas version, including its exact-version
+    # platform packages. This tap uses upstream's prebuilt native canvas addon.
+    inreplace "package.json", '"@napi-rs/canvas": "@CANVAS_RANGE@"', '"@napi-rs/canvas": "@CANVAS_VERSION@"'
+    system "npm", "install", *std_npm_args
+    bin.install_symlink libexec/"bin/ditherto"
+  end
+
+  test do
+    assert_equal version.to_s, shell_output("#{bin}/ditherto --version").strip
+
+    # A small RGBA gradient exercises native image decoding and PNG encoding.
+    (testpath/"input.png").binwrite [
+      "89504e470d0a1a0a0000000d4948445200000004000000040806000000a9f19e7e" \
+      "000000097048597300000b1300000b1301009a9c18000000017352474200aece1ce9" \
+      "0000000467414d410000b18f0bfc6105000000384944415478011dc8b10d00400405" \
+      "d09fcb156a11b5de1296b0a42509af7c00d099d955d5eb4504dc1daa8a75616620" \
+      "a28bbfc1cc10918b01b5090decbbb3d3f70000000049454e44ae426082",
+    ].pack("H*")
+    output = shell_output("#{bin}/ditherto input.png -o output.png --width 8 --palette BW --json")
+    assert_equal 8, JSON.parse(output).fetch("width")
+    assert_equal 8, JSON.parse(output).fetch("height")
+    png = (testpath/"output.png").binread
+    assert_equal "89504e470d0a1a0a", png[0, 8].unpack1("H*")
+    assert_equal [8, 8], png[16, 8].unpack("NN")
+  end
+end

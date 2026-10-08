@@ -1,0 +1,98 @@
+name: Update Homebrew tap
+on:
+  workflow_call:
+    inputs:
+      version:
+        description: Published stable npm version
+        required: true
+        type: string
+    secrets:
+      HOMEBREW_TAP_DEPLOY_KEY:
+        required: true
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Published stable npm version (also used to retry a tap update)
+        required: true
+        type: string
+permissions:
+  contents: read
+concurrency:
+  group: homebrew-tap
+  cancel-in-progress: false
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - run: node --test scripts/update-homebrew.test.mjs
+      - name: Generate formula from the published npm archive
+        env:
+          RELEASE_VERSION: ${{ inputs.version }}
+        run: node scripts/update-homebrew.mjs "$RELEASE_VERSION" candidate/ditherto.rb
+      - uses: actions/upload-artifact@v4
+        with:
+          name: homebrew-formula
+          path: candidate/ditherto.rb
+  test:
+    needs: prepare
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    env:
+      HOMEBREW_NO_AUTO_UPDATE: 1
+      HOMEBREW_NO_INSTALL_CLEANUP: 1
+      HOMEBREW_NO_ANALYTICS: 1
+    steps:
+      - uses: Homebrew/actions/setup-homebrew@9ffcbcc2c89631400988e8d4b1e3ac17dbbe3fe9
+      - uses: actions/download-artifact@v4
+        with:
+          name: homebrew-formula
+          path: candidate
+      - name: Install and test the candidate formula
+        run: |
+          brew tap-new --no-git vexlin/ditherto-ci
+          cp candidate/ditherto.rb "$(brew --repository vexlin/ditherto-ci)/Formula/ditherto.rb"
+          brew install --build-from-source vexlin/ditherto-ci/ditherto
+          brew test vexlin/ditherto-ci/ditherto
+          brew audit --strict vexlin/ditherto-ci/ditherto
+  publish:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: source
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - uses: actions/checkout@v4
+        with:
+          repository: vexlin/homebrew-tap
+          ssh-key: ${{ secrets.HOMEBREW_TAP_DEPLOY_KEY }}
+          path: tap
+      - uses: actions/download-artifact@v4
+        with:
+          name: homebrew-formula
+          path: candidate
+      - name: Update the tap without downgrading newer releases
+        env:
+          RELEASE_VERSION: ${{ inputs.version }}
+        run: |
+          node source/scripts/sync-homebrew.mjs candidate/ditherto.rb tap/Formula/ditherto.rb
+          cd tap
+          if git diff --quiet -- Formula/ditherto.rb; then
+            echo "Tap already up to date."
+            exit 0
+          fi
+          git config user.name "VEXLIN"
+          git config user.email "vexlin@vexlin.xyz"
+          git add Formula/ditherto.rb
+          git commit -m "Update ditherto to $RELEASE_VERSION"
+          git push origin HEAD:main

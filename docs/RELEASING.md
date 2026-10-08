@@ -57,6 +57,18 @@ The existing `v0.1.0` release predates this trigger and is already on npm. It wi
 
 ## Other distribution options
 
+### Homebrew
+
+The public tap is [`vexlin/homebrew-tap`](https://github.com/vexlin/homebrew-tap). Install with `brew install vexlin/tap/ditherto`; upgrade with `brew update && brew upgrade ditherto`.
+
+After a successful stable npm publication, `release.yml` calls `homebrew.yml`. It waits for the npm registry archive, checks its SHA-512 integrity, computes the formula's SHA-256, and pins the native canvas dependency to the version in the release's lockfile. The formula template lives in `packaging/homebrew/ditherto.rb.in`. It uses upstream prebuilt canvas binaries rather than building the native addon from source.
+
+The generated formula must pass installation, `brew test` (CLI version and actual PNG conversion), and `brew audit --strict` on macOS and Linux before the tap is updated. A write-enabled deploy key restricted to the tap is stored in this repository's `HOMEBREW_TAP_DEPLOY_KEY` Actions secret. No personal access token is required. Ordinary builds and package-only rehearsals do not change the tap.
+
+If npm succeeds but a tap update fails, fix the failure and run **Actions → Update Homebrew tap → Run workflow**, entering the published version (for example `0.2.0`). Use a source ref with a matching native dependency and these workflow files. This retries only Homebrew; it does not republish npm. An unchanged formula is a no-op, and older versions cannot overwrite a newer formula. Changing the template can update a formula without changing the npm version.
+
+For local formula preparation, run `node scripts/update-homebrew.mjs 0.2.0 /tmp/ditherto.rb`. The updater tests run with `node --test scripts/update-homebrew.test.mjs` and are included in CI.
+
 **Start with npm.** It fits the CLI, Node/native image adapter and browser bundler consumers in one package. Direct ESM browser files are also available in the Pages site's `dist/` directory; users can self-host the built files. Pages URLs track the latest deployment, so pin or self-host a release for reproducible production use.
 
 [JSR](https://jsr.io/docs/introduction) is worth revisiting for a separate browser-focused entry if users ask for it. Its TypeScript/ESM distribution model would require separate packaging and compatibility testing; it adds work without replacing the Node CLI's npm path. Do not claim Deno/Bun/native-platform support until verified on those runtimes. The package is published under the unscoped name `ditherto`.
