@@ -21,7 +21,7 @@
     "url": "git+https://github.com/vexlin/ditherto.git"
   },
   "license": "MIT",
-  "author": "Jessey White-Cinis <j@cin.is>",
+  "author": "VEXLIN <vexlin@vexlin.xyz>",
   "type": "module",
   "exports": {
     ".": {
