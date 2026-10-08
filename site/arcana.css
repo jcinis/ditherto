@@ -1,4 +1,4 @@
-:root{color-scheme:dark;--paper:#181622;--panel:#201d21;--ink:#eee0d5;--accent:#d9a9cc;--muted:#afa3b7;--line:#494044;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:13px;line-height:1.65;background:var(--paper);color:var(--ink)}
+:root{color-scheme:light;--paper:#ffffff;--panel:#ffffff;--ink:#0000ff;--accent:#0000ff;--muted:#0000ff;--line:#0000ff;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:13px;line-height:1.65;background:var(--paper);color:var(--ink)}
 .reveal-images .hero .arcana-image{opacity:0}
 .reveal-images .hero canvas.arcana-image.is-rendered{opacity:1;animation:image-reveal 400ms cubic-bezier(.22,1,.36,1) both}
 @keyframes image-reveal{from{clip-path:inset(0 100% 0 0)}to{clip-path:inset(0 0 0 0)}}
